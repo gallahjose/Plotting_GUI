@@ -1,4 +1,4 @@
-function [ fittedParameters,  fittedCurve, outlier, usedData, resSquared, OrigDM] = f_PolyFit( X,Y,degPoly,varargin)
+function [ fittedParameters,  fittedCurve, outlier, usedData, resSquared, OrigDM,opt] = f_PolyFit( X,Y,degPoly,varargin)
 %UNTITLED3 Summary of this function goes here
 %   Fits polynomial (degree:degPoly)
 
