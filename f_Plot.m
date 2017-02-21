@@ -508,8 +508,10 @@ if ~opt.Hold
         set(h(2),'YTickLabel','',...
             'XLim', [opt.LinearBound, opt.XLim(2)], ...
             'xscale', 'log',...
-            'XTickMode','manual',...
-            'XTick',10.^(-12:-1));
+            'XTickMode','manual');
+        
+        set(h(1), 'XLim', [-1*opt.LinearBound, opt.LinearBound], 'xscale', 'linear');
+        pause(0.1)
         
         set(h(1), 'XLim', [-1*opt.LinearBound, opt.LinearBound], 'xscale', 'linear','XTick',-1*opt.LinearBound:opt.LinearBound/2:opt.LinearBound);
         XTicks = get(h(1), 'XTick');
@@ -519,34 +521,44 @@ if ~opt.Hold
         XTickLabel{2} = '';
         set(h(1), 'XTickLabel', XTickLabel);
         
-        if opt.ps_time
-            pause(0.1)
-            XTickLabel_ps = [10.^(-12:-1)]*1E12;
+        XTick = 10.^(-12:-1);
+        XTick(XTick<=opt.LinearBound) = [];
+        h(2).XTick = XTick;
+        if h(end).XLim(end) < 10E-9
+            XTickLabel_ps = XTick*1E12;
             h(2).XTickLabel = XTickLabel_ps;
             xlabh.String = 'Time (ps)';
-            % Center - keep in mind that label is relative to axes scale
-            axes_length = h(1).Position(3)+h(2).Position(3);
-            axes_mid = axes_length/2;
-            
-            axes_2_pos = axes_mid - h(1).Position(3);
-            
-            axes_2_pos_frac = axes_2_pos./h(2).Position(3);
-            xLim = log10(h(2).XLim);
-            
-            xLab_pos = xLim(1) + axes_2_pos_frac*(xLim(2)-xLim(1));
-            xLab_pos = 10^(xLab_pos);
-            
-            xlabh.Position(1) = xLab_pos;
-            
-            h(1).XTickLabel{end} = '1';
-            h(2).XTickLabel(1,1) = ' ';
+            x_tick_scalar = 1E12;
         else
-            xlabh2 = xlabel(h(1), opt.LinearLabel,'fontsize',opt.FontSize);
-            xlabPos = get(xlabh,'Position');
-            xlabPos2 = get(xlabh2,'Position');
-            xlabPos2(2) = xlabPos(2);
-            set(xlabh2,'Position', xlabPos2);
+            XTickLabel = arrayfun(@(x) num2str(x,'%1.0E'),XTick,'UniformOutput',0);
+            XTickLabel = strcat(strrep(XTickLabel,'1E-','10^{-'),'}');
+            XTickLabel = strrep(XTickLabel,'-0','-');
+            h(2).XTickLabel = XTickLabel;
+            x_tick_scalar = 1;
         end
+        pause(0.1)
+        % Center - keep in mind that label is relative to axes scale
+        axes_length = h(1).Position(3)+h(2).Position(3);
+        axes_mid = axes_length/2;
+        axes_2_pos = axes_mid - h(1).Position(3);
+        axes_2_pos_frac = axes_2_pos./h(2).Position(3);
+        xLim = log10(h(2).XLim);
+        xLab_pos = xLim(1) + axes_2_pos_frac*(xLim(2)-xLim(1));
+        xLab_pos = 10^(xLab_pos);
+        xlabh.Position(1) = xLab_pos;
+        
+        h(1).XTickLabel{1} = '';
+        linear_label = opt.LinearBound*x_tick_scalar;
+        if linear_label >= 1
+            linear_label = num2str(linear_label,0);
+        else
+            linear_label = num2str(linear_label,'%1.0E');
+            linear_label = [strrep(linear_label,'E-','\times10^{-'),'}'];
+            linear_label = strrep(linear_label,'-0','-');
+        end
+        h(1).XTickLabel{end} = linear_label;
+        
+        
     else
         % avoid warning about negative log scale
         set(h(1),'xscale', opt.OnePlotScale, 'XLim', opt.XLim)
