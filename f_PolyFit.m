@@ -14,16 +14,18 @@ if size(X,2) > 1, X = X'; end
 % user input
 [opt] = f_OptSet(opt, varargin);
 
-%% Sorts X and Y
-[X, index] = sort(X, 'ascend');
-Y = Y(index);
-
 %% build design matrix [x^degPoly, x^degPoly-1, ...,  constant]
 if isempty(opt.designMatrix)
     [ designMatrix ] = f_PolyFitDM( X, degPoly, opt );
 else
     designMatrix = opt.designMatrix;
 end
+
+%% Sorts X and Y
+[X, index] = sort(X, 'ascend');
+Y = Y(index);
+designMatrix = designMatrix(index,:);
+X_Orig = X;
 
 %% Zero NaN values
 keep = ~isnan(Y).*~any(isnan(designMatrix),2);
