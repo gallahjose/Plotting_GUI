@@ -18,7 +18,7 @@ if ischar(time) % checks if TIME contains a string
         time = str2num(time);
         if strcmp(unit, 'm')
             time = time*10^(-3); end
-        if strcmp(unit, 'u')
+        if strcmp(unit, 'u') || strcmp(unit, '\mu')
             time = time*10^(-6); end
         if strcmp(unit, 'n')
             time = time*10^(-9); end
