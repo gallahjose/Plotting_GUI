@@ -942,3 +942,19 @@ end
 
 % Update handles structure
 guidata(hObject, handles);
+
+
+% --- Executes when entered data in editable cell(s) in trace_table.
+function trace_table_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to trace_table (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+
+% Edit this table and we will draw some patches onto the other graph type!
+
+[ handles ] = ProcessGUI_updater( handles,'add_patch', eventdata.Indices(1));
