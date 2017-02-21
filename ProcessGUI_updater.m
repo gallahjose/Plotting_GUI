@@ -59,7 +59,6 @@ if handles.zero_data_region.Value
 end
 
 %% Scale the wavelength array
-
 if ~isempty(opt.scale_wave)
     wave = 1240./wave;
     wave = flipud(wave);
@@ -174,6 +173,7 @@ if ~isempty(opt.make)
         label{3} = data_name;
         label{4} = [label{2}, ' (',data_name,')'];
         
+        %
         if max_index == min_index
             trace = data(min_index:max_index,:)';
         else
@@ -192,7 +192,7 @@ if ~isempty(opt.make)
                 norm_scalar = trace(index_norm);
                 norm_scalar = norm_scalar;
             else
-                
+                index_norm = sort(index_norm);
                 [~,index_norm(1)] =  min(abs(x_axes-f_TimeSI(handles.trace_norm_min.String)));
                 [~,index_norm(2)] =  min(abs(x_axes-f_TimeSI(handles.trace_norm_max.String)));
                 norm_range = trace(index_norm(1):index_norm(2));
@@ -204,7 +204,6 @@ if ~isempty(opt.make)
                     %norm_scalar = norm_scalar.*-1;
                     [~,norm_scalar] = f_NorTraces(norm_range);
                 end
-                
                 
             end
             
@@ -241,6 +240,7 @@ if ~isempty(opt.make)
         delete(ax_child(remove_patch));
     end
     
+    %% Update
     opt.add_patch = 0;
     opt.plot = [opt.plot,string];
     opt.plot_handles = [opt.plot_handles,axes_handles];
