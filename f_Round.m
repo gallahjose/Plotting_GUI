@@ -8,7 +8,7 @@ if ~exist('direction','var'), direction = 'round'; end
 
 zeroIndex = x == 0;
 
-xr = eval([direction,'( x / 10^( floor(log10(abs(x)))-sf+1) ) * 10^(floor(log10(abs(x)))-sf+1)']);
+xr = eval([direction,'( x ./ 10.^( floor(log10(abs(x)))-sf+1) ) .* 10.^(floor(log10(abs(x)))-sf+1)']);
 
 xr(zeroIndex) = 0;
 
