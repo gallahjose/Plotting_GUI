@@ -57,7 +57,7 @@ handles.output = hObject;
 
 
 %% Set Defaults
-handles.directory = 'V:\Joe Gallaher\Data\';
+handles.directory = f_UserPref( 'ProcessGUI' );
 
 handles.autoscale_signal.Value = 1;
 handles.save_path_sub_custom = [];
