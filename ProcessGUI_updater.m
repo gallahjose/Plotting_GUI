@@ -165,16 +165,12 @@ if ~isempty(opt.make)
         [~, min_index] = min(abs(trace_axes-min_index));
         [~, max_index] = min(abs(trace_axes-max_index));
         
-        if strcmp(string, 'Kinetics')
-            label{1} = [num2str(trace_axes(min_index),'%0.0f'),'-',num2str(trace_axes(max_index),'%0.0f'),...
-                ' ', units, ' (',num2str(max_index-min_index+1),')' ];
-            label{2} = [num2str(mean(trace_axes([min_index,max_index])),'%0.0f'), ' ', units];
-        else
-            label{1} = [num2strEng(trace_axes(min_index),'%0.0f'),'-',num2strEng(trace_axes(max_index),'%0.0f'),...
-                units, ' (',num2str(max_index-min_index+1),')' ];
-            label{2} = [num2strEng(mean(trace_axes([min_index,max_index])),'%0.0f'), units];
-        end
-        
+        % Make label for trace
+        % $ options
+        % one make true range str
+        label{1} = [num2strEng(trace_axes(min_index),3),'-',num2strEng(trace_axes(max_index),3),...
+            ' ', units, ' (',num2str(max_index-min_index+1),')' ];
+        label{2} = [num2strEng(mean(trace_axes([min_index,max_index])),3),' ',units];
         label{3} = data_name;
         label{4} = [label{2}, ' (',data_name,')'];
         
