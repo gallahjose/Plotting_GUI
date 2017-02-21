@@ -333,7 +333,10 @@ handles.data_name_box.String = handles.data_original_name;
 guidata(hObject, handles);
 
 
-[ handles.data, handles.time, handles.wave ] = f_LoadData( handles.fullpath );
+%[ handles.data, handles.time, handles.wave ] = f_LoadData( handles.fullpath );
+% updated loading to replace above. Updated file storage to include run
+% details.
+[ handles.data, handles.time, handles.wave, handles.RunDetails] = f_LoadTA( handles.fullpath );
 
 handles.data_original.data = handles.data;
 
