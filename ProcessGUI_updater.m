@@ -17,6 +17,7 @@ opt.concatenate = [];
 opt.plot = [];
 opt.plot_handles = [];
 opt.plot_surf = [];
+opt.add_patch = [];
 
 %Saving data
 opt.update_subdir = [];
@@ -231,7 +232,14 @@ if ~isempty(opt.make)
         
     end
     
+    %% Remove current patches
+    for m = 1 : length(axes_handles)
+        ax_child = [axes_handles(m).Children];
+        remove_patch = strcmp(get(ax_child,'type'),'patch');
+        delete(ax_child(remove_patch));
+    end
     
+    opt.add_patch = 0;
     opt.plot = [opt.plot,string];
     opt.plot_handles = [opt.plot_handles,axes_handles];
 end
@@ -485,6 +493,69 @@ if ~isempty(opt.save)
             save_array(:,remove) = [];
             cell2csv([handles.save_dir,handles.data_name_box.String, '_', handles.trace_save_name.String,'.csv'],save_array)
         end
+    end
+end
+
+%% Add patch onto spectra window to help with selection
+if ~isempty(opt.add_patch)
+    
+    % what is the start
+    string = strtrim(handles.trace_menu.String{handles.trace_menu.Value,:});
+    for n = 1 : 2
+        % options for both data sets
+        if strcmp(string, 'Kinetics') % update kinetics data
+            axes_handles = [handles.axis_spectra];
+            trace_axes = wave;
+            x_axes = time;
+            other_string = 'Spectra';
+        elseif strcmp(string, 'Spectra')
+            axes_handles = [handles.axis_kinetics1; handles.axis_kinetics2];
+            trace_axes = time;
+            x_axes = wave;
+            other_string = 'Kinetics';
+        end
+        
+        %% Remove current patches
+        for m = 1 : length(axes_handles)
+            ax_child = [axes_handles(m).Children];
+            remove_patch = strcmp(get(ax_child,'type'),'patch');
+            delete(ax_child(remove_patch));
+        end
+        %pause(0.1)
+        %% Add new pathces
+        if n == 1
+            % first do current table data
+            [table, table_num, I] = getGUItable(handles.trace_table.Data);
+        else
+            % second do other table data
+            [table, table_num, I] = getGUItable(handles.traces_menu_data.(string).trace_table);
+        end
+        if opt.add_patch <= length(I) && opt.add_patch > 0
+            opt.add_patch = I(opt.add_patch);
+        else
+            opt.add_patch = 0;
+        end
+        patch_color_std = [0.7,0.7,0.7];
+        patch_color_cur = [0.3,0.3,0.3];
+        
+        for m = 1 : length(axes_handles)
+            axes(axes_handles(m));
+            lim = axes_handles(m).YLim;
+            lim_x = axes_handles(m).XLim;
+            for k = 1 : size(table_num,1)
+                if k == opt.add_patch
+                    patch_color = patch_color_cur;
+                else
+                    patch_color = patch_color_std;
+                end
+                if table_num(k,1)<lim_x(2) || table_num(k,1)>lim_x(1)
+                    patch([table_num(k,:),fliplr(table_num(k,:))]',[lim(1),lim(1),lim(2),lim(2)]',...
+                        patch_color,'LineStyle','none');
+                end
+            end
+        end
+        string = other_string;
+        opt.add_patch = 0;
     end
 end
 
