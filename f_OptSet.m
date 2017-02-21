@@ -1,6 +1,22 @@
-function [opt] = f_OptSet(opt, newOpt)
+function [opt] = f_OptSet(opt, newOpt, outputWarning)
 %[opt] = f_OptSet(opt, newOpt)
-%   Detailed explanation goes here
+%   updates options (opt.'...') for functions writen by Shyamal
+%
+%   %%Inputed Values
+%   'opt'               structure containing current options
+%   'newOpt'            cell array with (from varargin) that has option
+%                       name, then new value.
+%   'outputWarning'     set if display of warnings for options that don't
+%                       exist
+%
+%   %%Returned Values
+%   'opt'               structure containing the updated options
+%
+%   %%Options
+%   'warning'            Label for plot x-axis
+%                       default = auto detect [Pixel, Time (s), Wavelength (nm)]
+%
+%   18-04-14 Shyamal - inital updated
 
 
 % user input
