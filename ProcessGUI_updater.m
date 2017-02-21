@@ -192,9 +192,9 @@ if ~isempty(opt.make)
                 norm_scalar = trace(index_norm);
                 norm_scalar = norm_scalar;
             else
-                index_norm = sort(index_norm);
                 [~,index_norm(1)] =  min(abs(x_axes-f_TimeSI(handles.trace_norm_min.String)));
                 [~,index_norm(2)] =  min(abs(x_axes-f_TimeSI(handles.trace_norm_max.String)));
+                index_norm = sort(index_norm);
                 norm_range = trace(index_norm(1):index_norm(2));
                 if norm_type == 2 %Normalize by average value in range
                     norm_scalar = abs(mean(norm_range));
