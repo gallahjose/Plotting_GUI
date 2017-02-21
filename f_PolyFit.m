@@ -7,6 +7,8 @@ opt.maxRuns = 100;
 opt.designMatrix = [];
 opt.bounds = 0;
 opt.critValue = 5;
+opt.poly = 1;
+opt.allow_neg = 1;
 if size(Y,2) > 1, Y = Y'; end
 if size(X,2) > 1, X = X'; end
 
@@ -44,8 +46,11 @@ outlier_Y = [];
 runs = 0;
 while length(X_1) ~= length(X) && runs <= opt.maxRuns
     % fits to design matrix
-    %fittedParameters = lsqnonneg(designMatrix,Y);
-    fittedParameters = designMatrix\Y;
+    if opt.allow_neg
+        fittedParameters = designMatrix\Y;
+    else
+        fittedParameters = lsqnonneg(designMatrix,Y);
+    end
     % makes fitted curve
     fittedCurve = designMatrix*fittedParameters;
     % Calculates cooks distance (for outliers)
