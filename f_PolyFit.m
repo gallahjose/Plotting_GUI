@@ -9,6 +9,7 @@ opt.bounds = 0;
 opt.critValue = 5;
 opt.poly = 1;
 opt.allow_neg = 1;
+opt.plotR = [];
 if size(Y,2) > 1, Y = Y'; end
 if size(X,2) > 1, X = X'; end
 
@@ -86,6 +87,12 @@ end
 fittedCurve = OrigDM*fittedParameters;
 outlier = [outlier_X, outlier_Y];
 usedData = [X,Y];
+
+if ishandle(opt.plotR)
+    h = f_Plot(fittedCurve,X_Orig,opt.plotR,'LineStyle','-','PlotStyles',[0.4,0.4,0.4],'PointStyle','');
+    h = f_Plot(Y,X,h,'hold',1,'PlotStyles',[0.2,0.8,0.2]);
+    h = f_Plot(outlier_Y,outlier_X,h,'hold',1,'PlotStyles',[0.8,0.2,0.2],'Legend',{'Fitted','Used','Outlier'});
+end
 
 end
 
