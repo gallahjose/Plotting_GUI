@@ -111,15 +111,20 @@ if ~isempty(opt.make)
         axes_handles = [handles.axis_kinetics1; handles.axis_kinetics2];
         trace_axes = wave;
         x_axes = time;
-        units = 'nm';
+        units_config = 1;
         crop_values = [f_TimeSI(handles.data_config.Data{2,1}), f_TimeSI(handles.data_config.Data{2,2})];
     elseif strcmp(string, 'Spectra')
         axes_handles = [handles.axis_spectra];
         trace_axes = time;
         x_axes = wave;
-        units = 's';
+        units_config = 2;
         crop_values = [str2num(handles.data_config.Data{1,1}), str2num(handles.data_config.Data{1,2})];
     end
+    
+    % Units come from the data_config, so they are responsive to user
+    % changes.
+    units = regexp(handles.data_config.Data{units_config,3},'\w*(?=\))','match'); 
+    units = units{end};
     
     if isfield(handles,string), handles.(string) = []; end
     
