@@ -128,28 +128,8 @@ if ~isempty(opt.make)
     end
     
     %Organise table with data slice information
-    table = handles.trace_table.Data;
-    %clean table
-    remove = cellfun(@isempty,table(:,2));
-    table(remove,2) = {'5%'};
-    remove = cellfun(@isempty,table(:,1));
-    table(remove,:) = [];
-    %find indexes
-    percentLoc = ~cellfun(@isempty,(regexp(table(:,2),'.*\%')));
-    percentLoc = find(percentLoc);
-    percent = arrayfun(@(x) table{x,2}(1:end-1),percentLoc,'UniformOutput',false);
-    percent = cellfun(@str2num,percent)./100;
-    
-    table_num = cellfun(@f_TimeSI,table(:,1:2),'UniformOutput',false);
-    
-    for n=1:length(percentLoc)
-        table_num(percentLoc(n),1:2) = {table_num{percentLoc(n),1}*(1-percent(n)),table_num{percentLoc(n),1}*(1+percent(n))};
-    end
-    
-    % Sorts based on min value
-    [~, I] = sort([table_num{:,1}]');
-    table = table(I,:);
-    table_num = table_num(I,:);
+    % Wrapped in function to use elsewhere
+    [table, table_num] = getGUItable(handles.trace_table.Data);
     % Updates GUI
     handles.trace_table.Data = [table;cell(6-size(table,1),3)];
     
@@ -512,3 +492,36 @@ end
 
 handles.prev_plot = opt.plot;
 handles.prev_plot_handle = opt.plot_handles;
+
+end
+
+
+function [table, table_num, I] = getGUItable(table)
+
+    %clean table
+    set_default = cellfun(@isempty,table(:,2));
+    table(set_default,2) = {'5%'};
+    remove = cellfun(@isempty,table(:,1));
+    table(remove,:) = [];
+    %find indexes
+    percentLoc = ~cellfun(@isempty,(regexp(table(:,2),'.*\%')));
+    percentLoc = find(percentLoc);
+    percent = arrayfun(@(x) table{x,2}(1:end-1),percentLoc,'UniformOutput',false);
+    percent = cellfun(@str2num,percent)./100;
+    
+    table_num = cellfun(@f_TimeSI,table(:,1:2),'UniformOutput',false);
+    
+    for n=1:length(percentLoc)
+        table_num(percentLoc(n),1:2) = {table_num{percentLoc(n),1}*(1-percent(n)),table_num{percentLoc(n),1}*(1+percent(n))};
+    end
+    
+    % Sorts based on min value
+    [~, I] = sort([table_num{:,1}]');
+    table = table(I,:);
+    table_num = table_num(I,:);
+    % make into array of numbers.
+    table_num = [[table_num{:,1}]',[table_num{:,2}]'];
+    
+
+
+end
