@@ -20,12 +20,7 @@ Y = Y(index);
 
 %% build design matrix [x^degPoly, x^degPoly-1, ...,  constant]
 if isempty(opt.designMatrix)
-    designMatrix = ones(length(X),degPoly);
-    designMatrix = bsxfun(@times,designMatrix,X);
-    designMatrix = bsxfun(@power,designMatrix,1:degPoly);
-    if opt.fitConstant
-        designMatrix = [ones(length(X),1),designMatrix,]; % adds constant term
-    end
+    [ designMatrix ] = f_PolyFitDM( X, degPoly, opt );
 else
     designMatrix = opt.designMatrix;
 end
