@@ -296,7 +296,15 @@ if ~isempty(opt.plot)
     
     for n=1:length(hue_types)
         hue_loc = find(cellfun(@(x) ~isempty(strfind(x, hue_types{n})), hues));
-        colors = f_Colorbrewer(length(hue_loc), [], hue_types{n}, 'PCHIP');
+        
+        %colors = f_Colorbrewer(length(hue_loc), [], hue_types{n}, 'PCHIP');
+        
+        % Either an actual hue or spectra
+        if strcmpi(hue_types{n},'Spectral')
+            colors = f_ColorPicker(length(hue_loc), 'type', 'qualitative');
+        else
+            colors = f_ColorPicker(length(hue_loc), 'hue', hue_types{n}, 'type', 'sequential');
+        end
         
         for k=1:size(colors,1)
             traces_plot(hue_loc(k)).color = colors(k,:);
