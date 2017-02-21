@@ -18,6 +18,7 @@ if size(X,2) > 1, X = X'; end
 [opt] = f_OptSet(opt, varargin);
 
 %% build design matrix [x^degPoly, x^degPoly-1, ...,  constant]
+
 if isempty(opt.designMatrix)
     [ designMatrix ] = f_PolyFitDM( X, degPoly, opt );
 else
@@ -81,7 +82,6 @@ while length(X_1) ~= length(X) && runs <= opt.maxRuns
     hatMatrixDiag = hatMatrixDiag(~rejected);
     runs = runs +1;
     
-    %% make designMatrix equal zero
 end
 
 fittedCurve = OrigDM*fittedParameters;
