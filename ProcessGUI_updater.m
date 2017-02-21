@@ -202,6 +202,7 @@ if ~isempty(opt.make)
                     [norm_scalar, index_norm(3)] = max(abs(norm_range));
                     index_norm = index_norm(3) + index_norm(1) - 1;
                     %norm_scalar = norm_scalar.*-1;
+                    [~,norm_scalar] = f_NorTraces(norm_range);
                 end
                 
                 
