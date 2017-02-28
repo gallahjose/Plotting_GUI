@@ -59,9 +59,9 @@ if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargi
         varargin = [];
     end
     
-    if max(data(:)) > 100, 
+    if max(data(:)) > 100
         %opt.JetType = 'TRPL';
-        opt.JetSymmetric = 0; 
+        opt.JetSymmetric = 0;
     end
     
     plotSurf = 1;
@@ -168,7 +168,7 @@ opt.ColorOptions = [{'hue'},'blue','type','qualitative','reverse',1];
 opt.patch = [];
 opt.patch_color = [0.8,0.8,0.8];
 
-% 
+%
 opt.log_scale = 0;
 
 tickH = [];
@@ -218,19 +218,32 @@ if ~useTime %time is not in this figure
 end
 
 %% %%%%%%% USER OPTIONS SET %%%%%%%%%%%
+% special f_opt check
+i = find(strcmpi(varargin,'XLabel'));
+if ~isempty(i) &&  strcmpi(varargin{i+1},'ignore')
+    varargin(i:i+1) = [];
+end
+i = find(strcmpi(varargin,'YLabel'));
+if ~isempty(i) &&  strcmpi(varargin{i+1},'ignore')
+    varargin(i:i+1) = [];
+end
+i = find(strcmpi(varargin,'ZLabel'));
+if ~isempty(i) &&  strcmpi(varargin{i+1},'ignore')
+    varargin(i:i+1) = [];
+end
+
 [opt] = f_OptSet(opt, varargin);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %% Other options...
 if opt.FlipX
     opt.V2 = opt.V2 - 180;
 end
-if strcmpi(opt.PointStyle,'.') 
+if strcmpi(opt.PointStyle,'.')
     opt.PointStyle = 'o';
 end
 if ~any(strcmpi(varargin,'FontSize')) && ishandle(axesName(end)) && strcmpi('axes', get(axesName(end),'type'))
-   opt.FontSize = get(axesName(1),'FontSize'); 
+    opt.FontSize = get(axesName(1),'FontSize');
 end
 if plotSurf
     % Surface Only Options
@@ -253,7 +266,7 @@ if ~isempty(opt.LinearBound)
     end
     % fraction linear part of linlog axis
     if ~any(strcmpi(varargin,{'LinearFraction'}))
-        if opt.LinearBound == 1E-12 && xAxes(end) > 1E-6;
+        if opt.LinearBound == 1E-12 && xAxes(end) > 1E-6
             opt.LinearFraction = 0.15;
         else
             opt.LinearFraction = 0.2;
@@ -280,16 +293,16 @@ end
 %% Log data
 if opt.log_scale && plotSurf
     neg_data = data <= 0;
-   data = log10(data); 
-   data(neg_data) = nan;
-   
-   %data = abs(data);
-   
-   % takes care of the limits!
-   opt.ZLim = log10(opt.ZLim);
-   opt.ZLim(1) = min(data(:));
-   
-   opt.JetType = 'logTRPL';
+    data = log10(data);
+    data(neg_data) = nan;
+    
+    %data = abs(data);
+    
+    % takes care of the limits!
+    opt.ZLim = log10(opt.ZLim);
+    opt.ZLim(1) = min(data(:));
+    
+    opt.JetType = 'logTRPL';
 end
 
 %% Checks Options
@@ -336,7 +349,7 @@ if opt.RescaleData
         if length(string) > 1
             string = regexp(string{2},'}','split');
             if length(string) > 1
-            opt.SI_Scalar = str2num(string{1});
+                opt.SI_Scalar = str2num(string{1});
             end
         else
             opt.SI_Scalar = 1;
@@ -349,11 +362,11 @@ if opt.RescaleData
     elseif abs(opt.SI_Scalar) > 1
         data = data/10^(opt.SI_Scalar);
         opt.ZLim = opt.ZLim/10^(opt.SI_Scalar);
-        opt.ZLabel = [opt.ZLabel, ' \times10^{',num2str(opt.SI_Scalar),'}'];
+        if ~isempty(opt.ZLabel)
+            opt.ZLabel = [opt.ZLabel, ' \times10^{',num2str(opt.SI_Scalar),'}'];
+        end
     end
 end
-
-
 
 %% Rounds Intensity Limits
 sigfig = 2;
@@ -400,7 +413,6 @@ if opt.DownSample
     yAxes = waveI;
 end
 
-
 %% Sets up axes for plotting
 if ~isempty(opt.Title)
     opt.Title = regexprep(opt.Title,'\_(?!{)','\\_'); %removes extra character (?!x) is a negative look ahead for x
@@ -439,9 +451,8 @@ if isfield(fh.UserData,'scaler');
     opt.LineWidth = opt.LineWidth.*fig_scaler;
     opt.MarkerSize = opt.MarkerSize.*fig_scaler;
 else
-   fig_scaler = 1; 
+    fig_scaler = 1;
 end
-
 
 %% Sets Generic Axes properties
 if ~opt.Hold
@@ -463,10 +474,10 @@ if ~opt.Hold
         end
         set(h(n), 'YLim', opt.YLim,'TickLength',opt.TickLength, 'LineWidth', opt.TickWidth);
     end
-    ylabel(h(1), opt.YLabel,'fontsize',opt.FontSize/fig_scaler);
+    ylabel(h(1), opt.YLabel,'fontsize',opt.FontSize/fig_scaler,'units','normalized');
     xlabh = xlabel(h(end), opt.XLabel,'fontsize',opt.FontSize/fig_scaler);
-    if ~isempty(opt.AxesTitle), 
-        ath = title(h(end),opt.AxesTitle,'FontSize',opt.FontSize*opt.FontScaler); 
+    if ~isempty(opt.AxesTitle)
+        ath = title(h(end),opt.AxesTitle,'FontSize',opt.FontSize*opt.FontScaler);
         ath.Units = 'Normalized';
         if length(h) > 1
             % Center - keep in mind that label is relative to axes scale
@@ -519,7 +530,13 @@ if ~opt.Hold
             'xscale', 'log',...
             'XTickMode','manual');
         
-        set(h(1), 'XLim', [-1*opt.LinearBound, opt.LinearBound], 'xscale', 'linear');
+        
+        if opt.XLim(1) < -1*opt.LinearBound
+            neg_lin_bound = -1*opt.LinearBound;
+        else
+            neg_lin_bound = opt.XLim(1);
+        end
+        set(h(1), 'XLim', [neg_lin_bound, opt.LinearBound], 'xscale', 'linear');
         pause(0.1)
         
         
@@ -556,6 +573,7 @@ if ~opt.Hold
         else
             linear_label = num2str(linear_label,'%1.0E');
             linear_label = [strrep(linear_label,'E-','\times10^{-'),'}'];
+            linear_label = strrep(linear_label,'1\times','');
             linear_label = strrep(linear_label,'-0','-');
         end
         h(1).XTickLabel{end} = linear_label;
@@ -586,13 +604,15 @@ else
     end
 end
 
+% set label units
+xlabh.Units = 'normalized';
 
 %% Colors
 % if opt.Hold
 %     % gets current line handles
 %     [ Line_h ] = axes_lines( h, 'skip', 0);
-%    num_lines = size(Line_h,1); 
-%    %num_lines = floor(size(Line_h,1)/2); 
+%    num_lines = size(Line_h,1);
+%    %num_lines = floor(size(Line_h,1)/2);
 % else
 %     num_lines = 0;
 % end
@@ -633,8 +653,8 @@ if opt.TwoPlots %linlog Plot
         end
         if opt.RemoveLegend
             for j = 1 : size(s_1,1)
-               s_1(j).Annotation.LegendInformation.IconDisplayStyle = 'off';
-               s_2(j).Annotation.LegendInformation.IconDisplayStyle = 'off';
+                s_1(j).Annotation.LegendInformation.IconDisplayStyle = 'off';
+                s_2(j).Annotation.LegendInformation.IconDisplayStyle = 'off';
             end
         end
     end
@@ -661,7 +681,7 @@ else %one plot
     end
 end
 if opt.JetBar
-        f_JetBar('allAxes', h,'cMin',opt.ZLim(1),'cMax',opt.ZLim(2),'type',opt.JetType,'equalBlueRed',opt.JetSymmetric);
+    f_JetBar('allAxes', h,'cMin',opt.ZLim(1),'cMax',opt.ZLim(2),'type',opt.JetType,'equalBlueRed',opt.JetSymmetric);
 else
     for n = 1 : length(h)
         colormap(h(n),'Jet')
@@ -682,7 +702,7 @@ for n = 1 : length(h)
             YTickLabel = cellstr(get(h(n), 'YTickLabel'));
             YTickLabel(cellfun(@length,YTickLabel)> 2) = {''};
             %if sum(~cellfun(@isempty, YTickLabel)) > 3
-                set(h(n), 'YTickLabel',cellstr(YTickLabel));
+            set(h(n), 'YTickLabel',cellstr(YTickLabel));
             %end
         end
     end
@@ -723,7 +743,6 @@ for n = 1 : length(h)
     
     hold(h(n),'off')
 end
-
 
 %% options for yLabes (i.e if in eV but want wavelength)
 if opt.RelabelY
@@ -828,7 +847,7 @@ if ~isempty(opt.patch)
             end
         end
     end
-    % moves pathc to back     
+    % moves pathc to back
     for m = 1 : length(axes_temp)
         ax_child = axes_temp(m).Children;
         ax_child_type = get(ax_child,'Type');
@@ -847,8 +866,6 @@ if opt.log_scale && plotSurf
     ch_ticks = strcat('10^{',ch_ticks,'}');
     ch.TickLabels = ch_ticks;
 end
-
-
 
 %% Updates Figure data
 %fig_data.Hold = 1;
