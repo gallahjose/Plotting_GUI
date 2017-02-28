@@ -21,7 +21,7 @@ logbase(~inrange)=0;
 
 ibase=1-(logbase-24)/3; %
 
-if ~isempty(varargin),
+if ~isempty(varargin)
     n=varargin{1};
 else
     n=-1;
@@ -49,4 +49,6 @@ end
 if  isempty(xstr)
     xstr = '';
 end
+
+xstr = strtrim(xstr);
 
