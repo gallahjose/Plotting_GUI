@@ -15,6 +15,12 @@ opt.forceSingle = 0;
 % user input (after autodetection to allow user options)
 [opt] = f_OptSet(opt, varargin);
 
+%% Wonky hue options
+if strcmp(opt.hue,'spectral')
+    opt.type = 'qualitative';
+end
+
+
 %% hue lookup table
 hueTable = [{'red'}, 0/360; {'blue'}, 200/360; {'teal'}, 170/360; {'purple'}, 270/360; {'orange'}, 40/360; {'green'}, 80/360; {'black'}, nan];
 if ~isnumeric(opt.hue)
