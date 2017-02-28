@@ -92,7 +92,7 @@ if size(opt.rowStyles,2) ~= numColumns
 end
 numRows = size(opt.rowStyles,1);
 % adds in escape characters for title
-if ~isempty(opt.figTitle),
+if ~isempty(opt.figTitle)
     %opt.figTitle = regexprep(opt.title,'\_(?!{)','\\_'); % repace '_' not followed by '{' with '\-'
     opt.figTitle = regexprep(opt.figTitle,'\\..{','');
     opt.figTitle = regexprep(opt.figTitle,'(?<!\\)}','');
@@ -190,13 +190,20 @@ end
 %% Check if figure is bigger than screen
 scaler = 1;
 if opt.figPos(3) > screen_size(3)
-    scaler = scaler*(screen_size(3)/opt.figPos(3));
-    opt.figPos = opt.figPos*scaler;
+    scaler = scaler*((screen_size(3)-30)/opt.figPos(3));
 end
 if opt.figPos(4) > screen_size(4)
-    scaler = scaler*(screen_size(4)/opt.figPos(4));
-    opt.figPos = opt.figPos*scaler;
+    scaler = scaler*((screen_size(4)-100)/opt.figPos(4));
 end
+
+% Make it so 150 dpi is integer scaler
+s = floor(150./scaler);
+scaler = 150/s;
+%out_str = arrayfun(@(x) num2str(round(x,0)), opt.figPos, 'UniformOutput', 0);
+opt.figPos = round(opt.figPos*scaler);
+%out_str = [out_str; arrayfun(@(x) num2str(round(x,0)), opt.figPos, 'UniformOutput', 0)]
+%scaler
+
 % resize title
 if exist('titleH','var') && ~isempty(titleH)
     titleH.FontSize = titleH.FontSize.*scaler;
