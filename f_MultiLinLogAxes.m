@@ -66,7 +66,8 @@ opt.xfigShift = 0;
 opt.xfigIncrease = 0;
 
 opt.defaultMonitor = 2;
-
+opt.maxAxes = inf;
+%%%%% User options set
 [opt] = f_OptSet(opt, varargin);
 
 titleH = [];
@@ -253,6 +254,7 @@ axes_head(1:size(opt.axes_head,1),1:size(opt.axes_head,2)) = opt.axes_head;
 %% Creates Plots
 axisPlotted = 0;
 half_correction = 0;
+axisPlot_type = [];
 y = 1 - opt.yPadding(end);
 for j = 1 : numRows
     %y = 1  - height*j - sum(opt.yPadding(end-j+1:end)) + half_correction;
@@ -307,6 +309,11 @@ for j = 1 : numRows
             end
         end
         axisPlotted = sum(arrayfun(@isgraphics,h(:)));
+        axisPlot_type = [axisPlot_type,opt.rowStyles(j,n)];
+        offset = sum(strcmp(axisPlot_type,'LinLog')) + sum(strcmp(axisPlot_type,'Residual'));
+        if axisPlotted - offset >= opt.maxAxes
+            break
+        end
     end
     y = y_temp - opt.yPadding(end-j);
     %half_correction = 0.5*height*sum(all(correct(1:j),2));
