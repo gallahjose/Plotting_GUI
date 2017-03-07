@@ -36,8 +36,18 @@ plotStyles = ones(opt.initialSize,3);
 if strcmp(opt.type, 'divergent')
     
 elseif strcmpi(opt.type, 'qualitative')
+    
     plotStyles = [0.6196,0.0039,0.2588; 0.8353,0.2431,0.3098; 0.9569,0.4275,0.2627; 0.9922,0.6824,0.3804; 0.6706,0.8667,0.6431; 0.4000,0.7608,0.6471; 0.1961,0.5333,0.7412; 0.3686,0.3098,0.6353];
-    plotStyles = plotStyles(round(linspace(1,length(plotStyles),numColors)),:);
+    
+    if numColors > size(plotStyles,1)
+        plot_x = [1:size(plotStyles,1)]';
+        num_x = [0:numColors-1]'.*((size(plotStyles,1)-1)/(numColors-1)) + 1;
+        
+        plotStyles = interp1(plot_x,plotStyles,num_x);
+        
+    else
+        plotStyles = plotStyles(round(linspace(1,length(plotStyles),numColors)),:);
+    end
 elseif strcmpi(opt.type, 'jet')
      %%%%%%%%%%%%%%%%%%%%%%%%
     %%%  max - dark red  %%%
