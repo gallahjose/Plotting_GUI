@@ -4,7 +4,7 @@ function [ plotStyles ] = f_ColorPicker( numColors, varargin )
 
 %% Sets Options
 
-opt.type = '';
+opt.type = ''; % qualitative jet sequential
 opt.hue = 'red';
 opt.minSaturation = 0.5; %0 is black
 opt.minValue = 0.5; %0 is black
