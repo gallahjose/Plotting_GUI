@@ -671,7 +671,7 @@ else %one plot
         if opt.RemoveLegend
             annotation = get(s, 'Annotation');
             if length (annotation) > 1
-                for n = 1 : length(annotation);
+                for n = 1 : length(annotation)
                     set(get(annotation{n}, 'LegendInformation'), 'IconDisplayStyle', 'off')
                 end
             else
