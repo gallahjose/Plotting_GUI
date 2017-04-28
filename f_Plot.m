@@ -834,8 +834,15 @@ else
 end
 
 %% add patch
+
 if ~isempty(opt.patch)
+    
+    if size(opt.patch,1) > size(opt.patch_color,1)
+        opt.patch_color = repmat(opt.patch_color,ceil(size(opt.patch,1)/size(opt.patch_color,1)),1);
+    end
+    
     axes_temp = h;
+    
     for m = 1 : length(axes_temp)
         axes(axes_temp(m));
         lim = axes_temp(m).YLim;
@@ -843,10 +850,11 @@ if ~isempty(opt.patch)
         for k = 1 : size(opt.patch,1)
             if opt.patch(k,1)<lim_x(2) || opt.patch(k,1)>lim_x(1)
                 patch([opt.patch(k,:),fliplr(opt.patch(k,:))]',[lim(1),lim(1),lim(2),lim(2)]',...
-                    opt.patch_color,'LineStyle','none');
+                    opt.patch_color(k,:),'LineStyle','none');
             end
         end
     end
+    
     % moves pathc to back
     for m = 1 : length(axes_temp)
         ax_child = axes_temp(m).Children;
