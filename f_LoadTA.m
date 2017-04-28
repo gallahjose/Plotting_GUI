@@ -14,8 +14,13 @@ split_index = find(cellfun(@isempty, A));
 if isempty(split_index)
     split_index = find(~cellfun(@isempty,regexp(A,'^,+$')));
 end
-data_input = A(1:split_index-1);
-run_details = A(split_index+1:end);
+if ~isempty(split_index)
+    data_input = A(1:split_index-1);
+    run_details = A(split_index+1:end);
+else
+    data_input = A;
+    run_details = [];
+end
 %% Loads Data
 for n = 1 : size(data_input,1)
     data_1 = [textscan(data_input{n}, '%f', 'delimiter', ',', 'MultipleDelimsAsOne', 0,'EmptyValue',NaN)]';
