@@ -1,4 +1,4 @@
-function [ h, fh, positions,titleH] = f_MultiLinLogAxes( numColumns, figH, varargin)
+function [ h, fh, positions,titleH,fontSize,tbh] = f_MultiLinLogAxes( numColumns, figH, varargin)
 %f_MultiLinLogAxes
 %|-------------------------------------------------------
 %|Title                                                 |
@@ -308,11 +308,15 @@ for j = 1 : numRows
         if opt.numAxes
             if ~isempty(opt.axesNumTxt{(j-1)*numColumns + n})
                 tbh = annotation(fh,'textbox',[x, y_temp + height_temp, 0.2, 0.04,],'VerticalAlignment','middle','FaceAlpha',0.9,'EdgeColor',...
+                if ~exist('tbh_index','var')
+                    tbh_index = 1;
+                end
                     'w','HorizontalAlignment', 'left', 'FontSize', opt.numAxesfontSize, 'FontWeight', 'bold','Interpreter','tex',...
                     'Margin',0,'LineStyle','none','FitBoxToText', 'on','BackgroundColor',[1,1,1],'String',opt.axesNumTxt{(j-1)*numColumns + n});  
                 pause(1/1000)
                 tbh.Position(1) = h(axisPlotted+1).Position(1) + 5/opt.figPos(3);
                 tbh.Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(end) - tbh.Position(4);
+                tbh_index = tbh_index + 1;
             end
         end
         axisPlotted = sum(arrayfun(@isgraphics,h(:)));
@@ -326,3 +330,4 @@ for j = 1 : numRows
     %half_correction = 0.5*height*sum(all(correct(1:j),2));
 end
 h = h(arrayfun(@isgraphics,h(:)));
+fontSize = opt.fontSize;
