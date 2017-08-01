@@ -176,23 +176,24 @@ opt.log_scale = 0;
 tickH = [];
 
 %% Logically Determins Options
-[~,zeroIndex] = min(abs(xAxes));
-if max(xAxes) > 10E-9;
-    opt.LinearBound = 2E-9;
-    opt.ps_time = 0;
-else
-    opt.LinearBound = 1E-12;
-end
 
-% if zeroIndex + 2 <= length(xAxes);
-%     if xAxes(zeroIndex+2)-xAxes(zeroIndex+1) > 200E-15 %checks the minimum spacing between time points is greater than 200 fs
-%         opt.LinearBound = 2E-9;
-%     else
-%         opt.LinearBound = 1E-12;
-%     end
+% if max(xAxes) > 10E-9
+%     opt.LinearBound = 2E-9;
+%     opt.ps_time = 0;
 % else
 %     opt.LinearBound = 1E-12;
 % end
+
+[~,zeroIndex] = min(abs(xAxes));
+if zeroIndex + 2 <= length(xAxes)
+    if xAxes(zeroIndex+2)-xAxes(zeroIndex+1) > 200E-15 %checks the minimum spacing between time points is greater than 200 fs
+        opt.LinearBound = 2E-9;
+    else
+        opt.LinearBound = 1E-12;
+    end
+else
+    opt.LinearBound = 1E-12;
+end
 
 %Sets x-axis label
 if ~any(strcmpi(varargin,{'YLabel'}))
