@@ -7,7 +7,7 @@ if size(traces,1) == 1
 else
     transpose_trace = 0;
 end
-opt.poly_bonds = [];
+opt.poly_bounds = [];
 opt.windowSize = 20;
 opt.forwardAve = round(size(traces,1)*0.005);
 opt.backwardAve = round(size(traces,1)*0.005);
@@ -34,9 +34,9 @@ normFactor = zeros(1, nEnd-nStart+1);
 
     
 for n = nStart : nEnd
-    if ~isempty(opt.poly_bonds)
-        opt.poly_bonds = sort(opt.poly_bonds);
-        y_fit = traces(opt.poly_bonds(1):opt.poly_bonds(2),n);
+    if ~isempty(opt.poly_bounds)
+        opt.poly_bounds = sort(opt.poly_bounds);
+        y_fit = traces(opt.poly_bounds(1):opt.poly_bounds(2),n);
         %y_fit = smooth(y_fit,round(length(y_fit)/200));
         degPoly = 6;
         %y_fit = smooth(y_fit);
@@ -52,7 +52,7 @@ for n = nStart : nEnd
         [valuesCheck,locs] = findpeaks(fittedCurve);
         [~,I] = max(valuesCheck);
         locs = locs(I);
-        valueIndex = round(high_res_wave(locs))+opt.poly_bonds(1)-1;
+        valueIndex = round(high_res_wave(locs))+opt.poly_bounds(1)-1;
     else
         if opt.var_method
             %% Calculates the variance over the +/- window range
