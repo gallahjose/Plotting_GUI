@@ -822,15 +822,15 @@ end
 
 %% Adds Legend
 if ~iscell(opt.Legend) && length(opt.Legend) > 1
-    lh = legend(h(end),'location', opt.LegendLocation);
-    set(lh,'Interpreter','tex')
+    legHand = legend(h(end),'location', opt.LegendLocation);
+    set(legHand,'Interpreter','tex')
     pause(0.000001)
 elseif iscell(opt.Legend)
-    lh = legend(h(end),opt.Legend,'location', opt.LegendLocation);
-    set(lh,'Interpreter','tex')
+    legHand = legend(h(end),opt.Legend,'location', opt.LegendLocation);
+    set(legHand,'Interpreter','tex')
     pause(0.000001)
 else
-    lh = [];
+    legHand = [];
 end
 
 %% add patch
