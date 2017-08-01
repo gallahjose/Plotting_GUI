@@ -110,6 +110,8 @@ opt.XLim = [min(xAxes) max(xAxes)];
 opt.ps_time = 1;
 opt.Hold = 0;
 
+opt.clear_marker = 0;
+
 % logically determined
 opt.TwoPlots = 1;
 opt.LinearBound = [];
@@ -616,6 +618,14 @@ xlabh.Units = 'normalized';
 % else
 %     num_lines = 0;
 % end
+
+
+
+if opt.clear_marker
+    opt.MarkerSize = opt.MarkerSize*0.8;
+    opt.LineWidth = opt.LineWidth*0.5;
+end
+
 %% Plots either two or one plots
 if opt.TwoPlots %linlog Plot
     opt.FlipX = 0;
@@ -643,13 +653,27 @@ if opt.TwoPlots %linlog Plot
         s = zeros(2,size(data,2));
         %Linear plot
         s_1 = plot(h(1), xAxes(lin_index_min:lin_index_max), data((lin_index_min:lin_index_max),:),...
-            'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize,'MarkerFaceColor','auto');
+            'linewidth', opt.LineWidth, 'markersize',opt.MarkerSize,'MarkerFaceColor','auto');
         %Log plot
         s_2 = plot(h(2),xAxes(lin_index_max-2:end), data((lin_index_max-2:end),:),...
             'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize,'MarkerFaceColor',[0,0,0]);
         for n = 1 : length(s_1)
-            set(s_1(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',opt.PlotStyles(n,:),'MarkerEdgeColor','none','LineStyle',opt.LineStyle{n},'Marker',opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
-            set(s_2(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',opt.PlotStyles(n,:),'MarkerEdgeColor','none','LineStyle',opt.LineStyle{n},'Marker',opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
+            if opt.clear_marker
+                MarkerFaceColor = 'none';
+                MarkerEdgeColor = opt.PlotStyles(n,:);
+            else
+                MarkerFaceColor = opt.PlotStyles(n,:);
+                MarkerEdgeColor = 'none';
+            end
+
+            set(s_1(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
+                'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
+                opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
+            
+            set(s_2(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
+                'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
+                opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
+        
         end
         if opt.RemoveLegend
             for j = 1 : size(s_1,1)
@@ -666,7 +690,18 @@ else %one plot
         s = plot(h(end), xAxes, data,...
             'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize);
         for n = 1 : length(s)
-            set(s(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',opt.PlotStyles(n,:),'MarkerEdgeColor','none','LineStyle',opt.LineStyle{n},'Marker',opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
+            if opt.clear_marker
+                MarkerFaceColor = 'none';
+                MarkerEdgeColor = opt.PlotStyles(n,:);
+            else
+                MarkerFaceColor = opt.PlotStyles(n,:);
+                MarkerEdgeColor = 'none';
+            end
+            
+            set(s(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
+                'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
+                opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
+        
         end
         if opt.RemoveLegend
             annotation = get(s, 'Annotation');
