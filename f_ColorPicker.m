@@ -6,8 +6,8 @@ function [ plotStyles ] = f_ColorPicker( numColors, varargin )
 
 opt.type = ''; % qualitative jet sequential
 opt.hue = 'red';
-opt.minSaturation = 0.5; %0 is black
-opt.minValue = 0.5; %0 is black
+opt.minSaturation = 0.3; %0 is black
+opt.minValue = 0.3; %0 is black
 opt.initialSize = 1000;
 opt.reverse = 0;
 opt.offset = 1;
@@ -32,6 +32,7 @@ if opt.hue > 1
     opt.hue = opt.hue/360;
 end
 
+%% Make Huse
 plotStyles = ones(opt.initialSize,3);
 if strcmp(opt.type, 'divergent')
     
@@ -49,6 +50,7 @@ elseif strcmpi(opt.type, 'qualitative')
         plotStyles = plotStyles(round(linspace(1,length(plotStyles),numColors)),:);
     end
 elseif strcmpi(opt.type, 'jet')
+%% Jet    
      %%%%%%%%%%%%%%%%%%%%%%%%
     %%%  max - dark red  %%%
     %%%                  %%%
@@ -108,16 +110,21 @@ elseif strcmpi(opt.type, 'jet')
 %     else
 %         plotStyles = plotStyles(round(opt.initialSize/2),:);
 %     end
-    plotStyles = jet(round(opt.initialSize/2));
-    
+    plotStyles = jet(round(opt.initialSize/2)); 
 elseif strcmpi(opt.type, 'sequential')
+%% Sequential    
     inhsv = 0;
+    
     if isnan(opt.hue)
+        
         plotStyles = zeros(opt.initialSize,3);
         plotStyles(:,1) = linspace(0.3,0.7,opt.initialSize);
         plotStyles(:,2) = plotStyles(:,1);
         plotStyles(:,3) = plotStyles(:,1);
+        opt.reverse = ~opt.reverse;
+        
     elseif opt.hue == 0/360 && ~opt.forceSingle
+    %% Special Red    
         
         %%%%%%%%%%%%%%%%%%%%%%%%
         %%%5  max - dark red  %%%
@@ -158,7 +165,7 @@ elseif strcmpi(opt.type, 'sequential')
         plotStyles = plotStyles(extraPoints:end,:);
         
     elseif opt.hue == 200/360 && ~opt.forceSingle
-        
+    %% Special Blue     
         numIntervals = opt.initialSize*1.1;
         maxGreen = 0.95;
         maxBlue = 1;
@@ -206,7 +213,6 @@ elseif strcmpi(opt.type, 'sequential')
     if inhsv
         plotStyles = hsv2rgb(plotStyles);
     end
-    
 else
     %plotStyles(:,1) = logspace(0, log10(0.9), opt.initialSize) + opt.offset;
     plotStyles(:,1) = linspace(0.1, 0.85, opt.initialSize).^(1.5);
