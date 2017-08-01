@@ -22,11 +22,11 @@ function [ h, fh, positions,titleH,fontSize,tbh] = f_MultiLinLogAxes( numColumns
 %|yBottomOffset                                         |
 %--------------------------------------------------------
 
-opt.xPadding = 80; %px
+opt.xPadding = 90; %px
 opt.xLeftOffset = 0; %px
 opt.xRightOffset = 20; %px
 
-opt.yPadding = 80; %px
+opt.yPadding = 90; %px
 opt.yTopOffset = 10; %px
 opt.yBottomOffset = 0; %px
 
@@ -54,6 +54,7 @@ opt.axesWidth = [];
 opt.axesNumTxt = [{'A'},'B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 % never again will there be no labels for axis (aslong as there is less than 104 axis)
 opt.axesNumTxt = [opt.axesNumTxt, strcat('A',opt.axesNumTxt),strcat('B',opt.axesNumTxt),strcat('C',opt.axesNumTxt)];
+opt.axesNumTxt = lower(opt.axesNumTxt);
 opt.axesNumTxtAppend = [];
 opt.axesNumTxtPre = [];
 opt.LeftLabel = [];
@@ -67,6 +68,9 @@ opt.xfigIncrease = 0;
 
 opt.defaultMonitor = 2;
 opt.maxAxes = inf;
+
+
+opt.LineWidth = 1.5;
 %%%%% User options set
 [opt] = f_OptSet(opt, varargin);
 
@@ -101,7 +105,7 @@ end
 %% append additional axes number text
 if ~isempty(opt.axesNumTxtAppend)
     if size(opt.axesNumTxtAppend,1) > 1 opt.axesNumTxtAppend = opt.axesNumTxtAppend'; end
-    opt.axesNumTxt(1:length(opt.axesNumTxtAppend)) = strcat(opt.axesNumTxt(1:length(opt.axesNumTxtAppend)),{': '},opt.axesNumTxtAppend);
+    opt.axesNumTxt(1:length(opt.axesNumTxtAppend)) = strcat(opt.axesNumTxt(1:length(opt.axesNumTxtAppend)),{'. '},opt.axesNumTxtAppend);
 end
 opt.axesNumTxt = [opt.axesNumTxtPre,opt.axesNumTxt];
 
@@ -209,7 +213,7 @@ if exist('titleH','var') && ~isempty(titleH)
     titleH.FontSize = titleH.FontSize.*scaler;
 end
 % apply scaler to other properties
-opt.fontSize = opt.fontSize *scaler;
+opt.fontSize = opt.fontSize*scaler;
 opt.titleSize = opt.titleSize*scaler;
 opt.numAxesfontSize = opt.numAxesfontSize*scaler;
 opt.xPadding = opt.xPadding.*scaler;
@@ -258,6 +262,15 @@ positions = zeros(size(numAxes,1),4);
 axes_head = zeros(numRows,numColumns);
 axes_head(1:size(opt.axes_head,1),1:size(opt.axes_head,2)) = opt.axes_head;
 
+%%
+axes_options = {
+    'fontsize'
+    opt.fontSize
+    'LineWidth'
+    opt.LineWidth
+    };
+
+
 %% Creates Plots
 axisPlotted = 0;
 half_correction = 0;
@@ -277,20 +290,20 @@ for j = 1 : numRows
         x =  width*(n-1) + sum(opt.xPadding(1:n));
         if strcmp(opt.rowStyles(j,n),'Linear') % One Plot
             positions(axisPlotted + 1,:) = [x,y_temp,width,height_temp];
-            h(axisPlotted + 1) = axes('position',positions(axisPlotted + 1,:),'fontsize',opt.fontSize);
+            h(axisPlotted + 1) = axes('position',positions(axisPlotted + 1,:),axes_options{:});
         elseif strcmp(opt.rowStyles(j,n),'LinLog') % LinLog Plot
             % Linear Plot
             positions(axisPlotted + 1,:) = [x,y_temp,widthLin,height_temp];
-            h(axisPlotted + 1) = axes('position',positions(axisPlotted + 1,:),'fontsize',opt.fontSize);
+            h(axisPlotted + 1) = axes('position',positions(axisPlotted + 1,:),axes_options{:});
             % Log Plot
             positions(axisPlotted + 2,:) = [x+widthLin,y_temp,widthLog,height_temp];
-            h(axisPlotted + 2) = axes('position',positions(axisPlotted + 2,:),'fontsize',opt.fontSize);
+            h(axisPlotted + 2) = axes('position',positions(axisPlotted + 2,:),axes_options{:});
         elseif strcmp(opt.rowStyles(j,n),'Residual') % Residual Plot
             positions(axisPlotted + 1,:) = [x,y_temp,width,(height_temp - height_temp/20)*1/4];
-            h(axisPlotted + 1) = axes('position',positions(axisPlotted + 1,:),'fontsize',opt.fontSize);
+            h(axisPlotted + 1) = axes('position',positions(axisPlotted + 1,:),axes_options{:});
             % Data Plot
             positions(axisPlotted + 2,:) = [x,y_temp+height_temp*1/4,width,height_temp*3/4];
-            h(axisPlotted +2) = axes('position',positions(axisPlotted + 2,:),'fontsize',opt.fontSize);
+            h(axisPlotted +2) = axes('position',positions(axisPlotted + 2,:),axes_options{:});
         end
         
         if n == 1 && ~isempty(opt.LeftLabel) && length(opt.LeftLabel) >= j
@@ -306,18 +319,21 @@ for j = 1 : numRows
             set(ht,'units','normalized')
         end
         if opt.numAxes
+            
             if ~isempty(opt.axesNumTxt{(j-1)*numColumns + n})
-                tbh = annotation(fh,'textbox',[x, y_temp + height_temp, 0.2, 0.04,],'VerticalAlignment','middle','FaceAlpha',0.9,'EdgeColor',...
                 if ~exist('tbh_index','var')
                     tbh_index = 1;
                 end
+                tbh(tbh_index) = annotation(fh,'textbox',[x, y_temp + height_temp, 0.2, 0.04,],'VerticalAlignment','middle','FaceAlpha',0.9,'EdgeColor',...
                     'w','HorizontalAlignment', 'left', 'FontSize', opt.numAxesfontSize, 'FontWeight', 'bold','Interpreter','tex',...
                     'Margin',0,'LineStyle','none','FitBoxToText', 'on','BackgroundColor',[1,1,1],'String',opt.axesNumTxt{(j-1)*numColumns + n});  
                 pause(1/1000)
-                tbh.Position(1) = h(axisPlotted+1).Position(1) + 5/opt.figPos(3);
-                tbh.Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(end) - tbh.Position(4);
+                tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) + 5/opt.figPos(3);
+                tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(end) - tbh(tbh_index).Position(4)*1.1;
                 tbh_index = tbh_index + 1;
             end
+        else
+           tbh = []; 
         end
         axisPlotted = sum(arrayfun(@isgraphics,h(:)));
         axisPlot_type = [axisPlot_type,opt.rowStyles(j,n)];
@@ -329,5 +345,8 @@ for j = 1 : numRows
     y = y_temp - opt.yPadding(end-j);
     %half_correction = 0.5*height*sum(all(correct(1:j),2));
 end
+
 h = h(arrayfun(@isgraphics,h(:)));
 fontSize = opt.fontSize;
+
+
