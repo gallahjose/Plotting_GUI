@@ -766,26 +766,93 @@ if opt.RelabelY
     set(h(1), 'YTickLabel',waveValues);
 end
 %% options for xLabes (i.e if in eV but want wavelength)
-if opt.RelabelX
+if opt.RelabelX || opt.DualX
     numTick = length(get(h(1), 'XTick'));
     if numTick < 6, numTick = 6; end
     waveStart = [1240/xAxes(1),1024/xAxes(end)];
     waveEnd = max(waveStart);
     waveStart = min(waveStart);
     waveRange = waveEnd - waveStart;
-    waveSpacing = waveRange/numTick-1;
+    
+    waveSpacing = waveRange/(numTick + 5);
     waveSpacing = round(waveSpacing/50)*50;
     waveStart2 = ceil(waveStart/50)*50;
-    waveValues = waveSpacing*[0:numTick] + waveStart2;
+    waveValues = waveSpacing*[0:(numTick+10)] + waveStart2;
     waveValues = fliplr(waveValues);
     
     eVValues = 1240./waveValues;
     waveValues = arrayfun(@num2str,waveValues,'UniformOutput',0);
-    waveValues(strcmpi(waveValues,'1300')) = {''};
-    waveValues(strcmpi(waveValues,'1100')) = {''};
+    
+    if any(strcmpi(waveValues,'900'))
+       waveValues( ismember(waveValues,{'950','1000'})) = {''};
+    end
+    if any(strcmpi(waveValues,'1000'))
+       waveValues( ismember(waveValues,{'1050','1100','1150'})) = {''};
+    end
+    if any(strcmpi(waveValues,'1100'))
+       waveValues( ismember(waveValues,{'1150','1200','1250'})) = {''};
+    end
+    if any(strcmpi(waveValues,'1300'))
+       waveValues( ismember(waveValues,{'1350','1400','1450','1500'})) = {''};
+    end
+    if any(strcmpi(waveValues,'1400'))
+       waveValues( ismember(waveValues,{'1450','1500','1550','1600'})) = {''};
+    end
+    
+    
     waveValues = char(waveValues);
     for n = 1:length(h)
-        set(h(n), 'XTick',eVValues);
+        if opt.DualX
+            h_new(n) = axes('Position',h(n).Position);
+            pause(0.1)
+            all_option = {
+                'FontWeight'
+                'XLim'
+                'YLim'
+                'ZLim'
+                'XDir'
+                'YDir'
+                'ZDir'
+                'TickLength'
+                'LineWidth'
+                'XTick'
+                'YTick'
+                'ZTick'
+                'FontSize'
+                };
+            
+            for j = 1 : length(all_option)
+                h_new(n).(all_option{j}) = h(n).(all_option{j});
+            end
+            
+            h_new(n).YLabel = [];
+            h_new(n).YTickLabel = [];
+            h_new(n).XAxisLocation = 'top';
+            h_new(n).YAxisLocation = 'right';
+            h_new(n).Color = 'none';
+            
+            
+            h(n).Box = 'off';
+            h_new(n).Units = 'Pixels';
+            
+            h(n).Units = 'Pixels';
+        else
+            h_new(n) = h(n);
+        end
+        
+        set(h_new(n), 'XTick',flipud(eVValues));
+        set(h_new(n), 'XTickLabel',waveValues);
+    end
+    if opt.DualX
+        %fh.Position(4) = fh.Position(4)*1.15;
+        xlabel(h_new(end), 'Wavelength (nm)','fontsize',opt.FontSize/fig_scaler,'units','normalized');
+        
+        pause(0.1)
+        for n = 1 : length(h)
+            h_new(n).Units = 'normalized';
+            h(n).Units = 'normalized';
+        end
+        
     end
     set(h(1), 'XTickLabel',waveValues);
 end
