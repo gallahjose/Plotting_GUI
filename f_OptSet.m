@@ -20,12 +20,12 @@ function [opt] = f_OptSet(opt, newOpt, outputWarning)
 
 %% Check input varibales
 if ~exist('outputWarning','var'), outputWarning = 1; end
-options = fieldnames(opt); 
+options = fieldnames(opt);
 for i = 1 : floor(length(newOpt)/2)
     fieldCheck = strcmpi(newOpt{2*i-1},options);
     if any(fieldCheck) %Checks if field exists
-            fieldName = options(fieldCheck);
-            opt.(fieldName{1}) = newOpt{2*i}; %set option
+        fieldName = options(fieldCheck);
+        opt.(fieldName{1}) = newOpt{2*i}; %set option
     elseif outputWarning % Warning if field doesnt exist
         if isa(newOpt{2*i-1}, 'char') % Catch for string or number
             warning(['Option "', newOpt{2*i-1}, '" does not exist, ignoring'])
@@ -34,6 +34,5 @@ for i = 1 : floor(length(newOpt)/2)
         end
     end
 end
-
 end
 
