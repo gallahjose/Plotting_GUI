@@ -1,4 +1,4 @@
-function [h, opt_plot, tickH, fh, lh] = f_Plot( data, xAxes, axesName, varargin)
+function [h, opt_plot, tickH, fh, legHand] = f_Plot( data, xAxes, axesName, varargin)
 %f_Plot(traces, xAxes, axesName, options) - gives traces
 %[h, opt, tickH, fh, lh] = f_Plot( data, xAxes, axesName, varargin) - gives surface
 %Produces plots of data minimizing user input
@@ -48,6 +48,7 @@ opt.JetType = 'Jet';
 opt.JetSymmetric = 0;
 if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargin{1})
     %Surface Plot
+    
     yAxes = axesName;
     axesName = varargin{1};
     if size(yAxes,1) ~= length(yAxes), yAxes = yAxes'; end
@@ -68,6 +69,9 @@ if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargi
     useTime = 1;
     xRightOffset = 80;
     xPadding = 90;
+    
+    
+    varargin = [varargin,{'TickWidth'},0.5];
 else
     if size(xAxes,2) ~= 1, xAxes = xAxes'; end
     if size(data,1) ~= size(xAxes,1), data = data'; end
@@ -90,7 +94,7 @@ else
     
     plotSurf = 0;
     xRightOffset = 30;
-    xPadding = 90;
+    xPadding = 110;
 end
 
 %% Sets Options
@@ -123,17 +127,18 @@ opt.OnePlotScale = 'linear';
 opt.PlotZero = 1;
 opt.RelabelY = 0;
 opt.RelabelX = 0;
+opt.DualX = 0;
 opt.RescaleData = 1;
 opt.SI_Scalar = 0;
 opt.IntegerIntensity = 0;
 opt.ZeroColor = [0 0 0];
 opt.TickLength = [0.02, 0.02];
-opt.TickWidth = 0.5;
+opt.TickWidth = 1.5;
 opt.RemoveXTick = 0;
 opt.RemoveXLabel = [];
 opt.RemoveYTick = 0;
 opt.FontSize = 20;
-opt.FontScaler = 0.7;
+opt.FontScaler = 1;
 opt.RemoveLegend = 0;
 opt.SqueezeZlim = 1;
 opt.addspacingZ = 0;
@@ -248,6 +253,11 @@ end
 if ~any(strcmpi(varargin,'FontSize')) && ishandle(axesName(end)) && strcmpi('axes', get(axesName(end),'type'))
     opt.FontSize = get(axesName(1),'FontSize');
 end
+if ~any(strcmpi(varargin,'TickWidth')) && ishandle(axesName(end)) && strcmpi('axes', get(axesName(end),'type'))
+    opt.TickWidth = get(axesName(1),'LineWidth');
+end
+    
+    
 if plotSurf
     % Surface Only Options
 else
