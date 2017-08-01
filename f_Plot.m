@@ -376,7 +376,7 @@ if opt.RescaleData
         data = data/10^(opt.SI_Scalar);
         opt.ZLim = opt.ZLim/10^(opt.SI_Scalar);
         if ~isempty(opt.ZLabel)
-            opt.ZLabel = [opt.ZLabel, ' \times10^{',num2str(opt.SI_Scalar),'}'];
+            opt.ZLabel = [opt.ZLabel, ' (\times10^{',num2str(opt.SI_Scalar),'})'];
         end
     end
 end
@@ -455,7 +455,7 @@ else % loads the axes handles into variables
 end
 
 %% Apply figure scaler to text and point sizes if necessary
-if isfield(fh.UserData,'scaler');
+if isfield(fh.UserData,'scaler')
     fig_scaler =  fh.UserData.scaler;
     
     opt.TickLength = opt.TickLength.*fig_scaler;
@@ -668,6 +668,7 @@ if opt.TwoPlots %linlog Plot
         %Log plot
         s_2 = plot(h(2),xAxes(lin_index_max-2:end), data((lin_index_max-2:end),:),...
             'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize,'MarkerFaceColor',[0,0,0]);
+        
         for n = 1 : length(s_1)
             if opt.clear_marker
                 MarkerFaceColor = 'none';
@@ -816,6 +817,7 @@ if opt.RelabelX || opt.DualX
     numTick = length(get(h(1), 'XTick'));
     if numTick < 6, numTick = 6; end
     waveStart = [1240/xAxes(1),1024/xAxes(end)];
+    
     waveEnd = max(waveStart);
     waveStart = min(waveStart);
     waveRange = waveEnd - waveStart;
@@ -847,6 +849,8 @@ if opt.RelabelX || opt.DualX
     
     
     waveValues = char(waveValues);
+    
+    %% Make new xAxes or use the same
     for n = 1:length(h)
         if opt.DualX
             h_new(n) = axes('Position',h(n).Position);
@@ -900,7 +904,6 @@ if opt.RelabelX || opt.DualX
         end
         
     end
-    set(h(1), 'XTickLabel',waveValues);
 end
 
 %% Plots new set of axis for tick labels
