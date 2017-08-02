@@ -175,6 +175,8 @@ opt.ColorOptions = [{'hue'},'blue','type','qualitative','reverse',1];
 opt.patch = [];
 opt.patch_color = [0.8,0.8,0.8];
 
+opt.UiStack = 1;
+
 %
 opt.log_scale = 0;
 
@@ -693,6 +695,8 @@ if opt.TwoPlots %linlog Plot
                 s_2(j).Annotation.LegendInformation.IconDisplayStyle = 'off';
             end
         end
+        
+        
     end
     
 else %one plot
@@ -727,6 +731,27 @@ else %one plot
         end
     end
 end
+
+%% Ui Stack
+if opt.UiStack
+    if exist('s_1','var')
+        for j = 1 : size(s_1,1)
+            uistack(s_1(j), 'bottom') 
+        end
+    end
+    if exist('s_2','var')
+        for j = 1 : size(s_2,1)
+            uistack(s_2(j), 'bottom') 
+        end
+    end
+    if exist('s','var')
+        for j = 1 : size(s,1)
+            uistack(s(j), 'bottom') 
+        end
+    end
+end
+
+
 if opt.JetBar
     f_JetBar('allAxes', h,'cMin',opt.ZLim(1),'cMax',opt.ZLim(2),'type',opt.JetType,'equalBlueRed',opt.JetSymmetric);
 else
