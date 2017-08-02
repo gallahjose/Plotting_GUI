@@ -175,7 +175,7 @@ opt.ColorOptions = [{'hue'},'blue','type','qualitative','reverse',1];
 opt.patch = [];
 opt.patch_color = [0.8,0.8,0.8];
 
-opt.UiStack = 1;
+opt.UiStack = 0;
 
 %
 opt.log_scale = 0;
