@@ -5,7 +5,7 @@ opt.check_eV = 1;
 unit_string = {'m'};
 
 %% Loads csv files
-fid = fopen(fullpath,'r');
+[fid,msg] = fopen(fullpath,'r');
 A = textscan(fid, '%s', 'delimiter', '\n', 'MultipleDelimsAsOne', 0,'EmptyValue',Inf);
 fclose(fid);
 %% Finds data details split
