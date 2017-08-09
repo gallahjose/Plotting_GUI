@@ -158,7 +158,7 @@ opt.ShadingType = 'interp';
 % Trace Only Opitons
 opt.PointStyle = {'s','^','o','d'};
 opt.LineStyle = '';
-opt.LineWidth = 2.5;
+opt.LineWidth = 3;
 if size(data,1) < 200
     opt.MarkerSize = 5;
 else
@@ -839,41 +839,55 @@ if opt.RelabelY
 end
 %% options for xLabes (i.e if in eV but want wavelength)
 if opt.RelabelX || opt.DualX
-    numTick = length(get(h(1), 'XTick'));
-    if numTick < 6, numTick = 6; end
-    waveStart = [1240/xAxes(1),1024/xAxes(end)];
+    %% Calculate new spacing
+    %ev_step = 0.2;
+    wave_step = 50;
+    eVRange = [min(xAxes),max(xAxes)];
+    waveRange = 1240./eVRange;
     
-    waveEnd = max(waveStart);
-    waveStart = min(waveStart);
-    waveRange = waveEnd - waveStart;
+    %eVValues = [eVRange(1)/ev_step:1:eVRange(2)/ev_step]*ev_step;
     
-    waveSpacing = waveRange/(numTick + 5);
-    waveSpacing = round(waveSpacing/50)*50;
-    waveStart2 = ceil(waveStart/50)*50;
-    waveValues = waveSpacing*[0:(numTick+10)] + waveStart2;
+    waveValues = [ceil(waveRange(2)/wave_step):1:ceil(waveRange(1)/wave_step)]*wave_step;
+    
+    %waveValues =1240./eVValues;
+    %waveValues = round(waveValues/25)*25;
+    %eVValues =1240./waveValues;
+    
+    wave_range = [
+    0, 10
+    500, 50
+    600, 100
+    900, 300
+    1800, 400
+    2000, 800
+    6000, 1200
+    ];
+    
+    n = 1;
+    while n < length(waveValues)
+        wr_i = find(waveValues(n) >= wave_range(:,1),1,'last');
+        
+        remove = true;
+        while remove
+            if n+1 <=length(waveValues)
+                remove = waveValues(n) + wave_range(wr_i,2) > waveValues(n+1);
+                if remove
+                    waveValues(n+1) = [];
+                end
+            else
+                remove = false;
+            end
+        end
+        n = n + 1;
+    end
+    
     waveValues = fliplr(waveValues);
     
-    eVValues = 1240./waveValues;
+    eVValues =1240./waveValues;
+    
     waveValues = arrayfun(@num2str,waveValues,'UniformOutput',0);
-    
-    if any(strcmpi(waveValues,'900'))
-       waveValues( ismember(waveValues,{'950','1000'})) = {''};
-    end
-    if any(strcmpi(waveValues,'1000'))
-       waveValues( ismember(waveValues,{'1050','1100','1150'})) = {''};
-    end
-    if any(strcmpi(waveValues,'1100'))
-       waveValues( ismember(waveValues,{'1150','1200','1250'})) = {''};
-    end
-    if any(strcmpi(waveValues,'1300'))
-       waveValues( ismember(waveValues,{'1350','1400','1450','1500'})) = {''};
-    end
-    if any(strcmpi(waveValues,'1400'))
-       waveValues( ismember(waveValues,{'1450','1500','1550','1600'})) = {''};
-    end
-    
-    
     waveValues = char(waveValues);
+    n = 1;
     
     %% Make new xAxes or use the same
     for n = 1:length(h)
@@ -915,9 +929,12 @@ if opt.RelabelX || opt.DualX
             h_new(n) = h(n);
         end
         
-        set(h_new(n), 'XTick',flipud(eVValues));
+        
+        set(h_new(n), 'XTick',eVValues);
         set(h_new(n), 'XTickLabel',waveValues);
     end
+    
+    
     if opt.DualX
         %fh.Position(4) = fh.Position(4)*1.15;
         xlabel(h_new(end), 'Wavelength (nm)','fontsize',opt.FontSize/fig_scaler,'units','normalized');
