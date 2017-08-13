@@ -180,6 +180,8 @@ opt.UiStack = 0;
 %
 opt.log_scale = 0;
 
+opt.grid = 'on';
+
 tickH = [];
 
 %% Logically Determins Options
@@ -479,7 +481,7 @@ if ~opt.Hold
         delete(lh);
         hold(h(n),'on')
         box(h(n), 'on');
-        grid(h(n), 'on');
+        grid(h(n), opt.grid);
         if plotSurf
             view(h(n), [opt.V1, opt.V2]);
             zlabel(h(n), opt.ZLabel,'fontsize',opt.FontSize)
@@ -958,7 +960,7 @@ if opt.OverlayAxis
         tickH(n) = axes('position',axesPos,'fontsize',3,'parent',fh);
         view(tickH(n), [opt.V1, opt.V2]);
         
-        grid(tickH(n), 'on');
+        grid(tickH(n), opt.grid);
         box(tickH(n), 'on');
         
         xLimits = get(h(n), 'Xlim');
