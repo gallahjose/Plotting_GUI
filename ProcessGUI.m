@@ -22,7 +22,7 @@ function varargout = ProcessGUI(varargin)
 
 % Edit the above text to modify the response to help ProcessGUI
 
-% Last Modified by GUIDE v2.5 15-Feb-2017 13:57:07
+% Last Modified by GUIDE v2.5 30-Aug-2017 08:46:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -961,3 +961,12 @@ function trace_table_CellEditCallback(hObject, eventdata, handles)
 % Edit this table and we will draw some patches onto the other graph type!
 
 [ handles ] = ProcessGUI_updater( handles,'add_patch', eventdata.Indices(1));
+
+
+% --- Executes on button press in spectra_bg_show.
+function spectra_bg_show_Callback(hObject, eventdata, handles)
+% hObject    handle to spectra_bg_show (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of spectra_bg_show

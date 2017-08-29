@@ -112,12 +112,19 @@ if ~isempty(opt.make)
         x_axes = time;
         units_config = 1;
         crop_values = [f_TimeSI(handles.data_config.Data{2,1}), f_TimeSI(handles.data_config.Data{2,2})];
+        add_spectra = [];
     elseif strcmp(string, 'Spectra')
         axes_handles = [handles.axis_spectra];
         trace_axes = time;
         x_axes = wave;
         units_config = 2;
         crop_values = [str2num(handles.data_config.Data{1,1}), str2num(handles.data_config.Data{1,2})];
+        
+        if handles.spectra_bg_show.Value
+            add_spectra = handles.RunDetails.Background;
+        else
+            add_spectra = [];
+        end
     end
     
     % Units come from the data_config, so they are responsive to user
@@ -158,8 +165,13 @@ if ~isempty(opt.make)
     x_axes_crop = x_axes(data_min_index:data_max_index);
     
     for n=1:size(table_num,1)
-        min_index = table_num{n,1};
-        max_index = table_num{n,2};
+        if iscell(table_num)
+            min_index = table_num{n,1};
+            max_index = table_num{n,2};
+        else
+            min_index = table_num(n,1);
+            max_index = table_num(n,2);
+        end
         
         [~, min_index] = min(abs(trace_axes-min_index));
         [~, max_index] = min(abs(trace_axes-max_index));
@@ -229,10 +241,31 @@ if ~isempty(opt.make)
         handles.(string).(table{n,3})(n).linestyle = handles.trace_plot_config.Data(2);
         handles.(string).(table{n,3})(n).markerstyle = handles.trace_plot_config.Data(3);
         handles.(string).(table{n,3})(n).markersize = str2num(handles.trace_plot_config.Data{4});
-        handles.(string).(table{n,3})(n).linewidth = str2num(handles.trace_plot_config.Data{4});
-        
+        handles.(string).(table{n,3})(n).linewidth = str2num(handles.trace_plot_config.Data{4}); 
     end
-    
+    if ~isempty(add_spectra)
+        
+        % add in background
+        len_stru = length(handles.(string).(table{n,3}));
+        handles.(string).(table{n,3})(2:len_stru+1) = handles.(string).(table{n,3});
+        
+        n = 1;
+        trace = add_spectra;
+        [label{:}] =  deal('Background');
+        
+        handles.(string).(table{n,3})(n).trace_original = trace;
+        handles.(string).(table{n,3})(n).x_axis_original = x_axes;
+        handles.(string).(table{n,3})(n).trace = trace(data_min_index:data_max_index);
+        handles.(string).(table{n,3})(n).x_axis = x_axes_crop;
+        handles.(string).(table{n,3})(n).label = label;
+        
+        %Get drawing styles from GUI table
+        handles.(string).(table{n,3})(n).hue = 'black';
+        handles.(string).(table{n,3})(n).linestyle = '-';
+        handles.(string).(table{n,3})(n).markerstyle = {''};
+        handles.(string).(table{n,3})(n).markersize = str2num(handles.trace_plot_config.Data{4});
+        handles.(string).(table{n,3})(n).linewidth = str2num(handles.trace_plot_config.Data{4}); 
+    end
     %% Remove current patches
     for m = 1 : length(axes_handles)
         ax_child = [axes_handles(m).Children];
@@ -545,8 +578,8 @@ if ~isempty(opt.add_patch)
         else
             opt.add_patch = 0;
         end
-        patch_color_std = [0.7,0.7,0.7];
-        patch_color_cur = [0.3,0.3,0.3];
+        patch_color_std = [0.8,0.8,0.8];
+        patch_color_cur = [0.8,0.8,0.8];
         
         for m = 1 : length(axes_handles)
             axes(axes_handles(m));
@@ -559,8 +592,10 @@ if ~isempty(opt.add_patch)
                     patch_color = patch_color_std;
                 end
                 if table_num(k,1)<lim_x(2) || table_num(k,1)>lim_x(1)
-                    patch([table_num(k,:),fliplr(table_num(k,:))]',[lim(1),lim(1),lim(2),lim(2)]',...
+                    ph = patch([table_num(k,:),fliplr(table_num(k,:))]',[lim(1),lim(1),lim(2),lim(2)]',...
                         patch_color,'LineStyle','none');
+                    
+                    uistack(ph,'bottom')
                 end
             end
         end
