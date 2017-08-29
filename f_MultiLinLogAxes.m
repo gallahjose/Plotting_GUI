@@ -329,7 +329,7 @@ for j = 1 : numRows
                     'Margin',0,'LineStyle','none','FitBoxToText', 'on','BackgroundColor',[1,1,1],'String',opt.axesNumTxt{(j-1)*numColumns + n});  
                 pause(1/1000)
                 tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) + 5/opt.figPos(3);
-                tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(end) - tbh(tbh_index).Position(4)*1.1;
+                tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(end) - tbh(tbh_index).Position(4)*1.5;
                 tbh_index = tbh_index + 1;
             end
         else
