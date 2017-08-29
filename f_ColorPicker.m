@@ -22,7 +22,17 @@ end
 
 
 %% hue lookup table
-hueTable = [{'red'}, 0/360; {'blue'}, 200/360; {'teal'}, 170/360; {'purple'}, 270/360; {'orange'}, 40/360; {'green'}, 80/360; {'black'}, nan];
+hueTable = {
+    'red',      0/360
+    'orange',   40/360
+    'green',    100/360
+    'teal',     170/360
+    'blue',     200/360
+    'purple',   270/360
+    'pink',     320/360
+    'black',    nan
+    };
+
 if ~isnumeric(opt.hue)
     [~, index] = max(strcmpi(opt.hue, hueTable(:,1)));
     opt.hue = hueTable{index,2};
