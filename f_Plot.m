@@ -135,6 +135,7 @@ opt.ZeroColor = [0 0 0];
 opt.TickLength = [0.02, 0.02];
 opt.TickWidth = 1.5;
 opt.RemoveXTick = 0;
+opt.RemoveXDualTick = 0;
 opt.RemoveXLabel = [];
 opt.RemoveYTick = 0;
 opt.FontSize = 20;
@@ -469,6 +470,11 @@ if isfield(fh.UserData,'scaler')
     opt.MarkerSize = opt.MarkerSize.*fig_scaler;
 else
     fig_scaler = 1;
+end
+
+%%
+if opt.RemoveXTick
+    opt.XLabel = '';
 end
 
 %% Sets Generic Axes properties
@@ -893,6 +899,7 @@ if opt.RelabelX || opt.DualX
     
     %% Make new xAxes or use the same
     for n = 1:length(h)
+        blank_x = 0;
         if opt.DualX
             h_new(n) = axes('Position',h(n).Position);
             pause(0.1)
@@ -927,10 +934,18 @@ if opt.RelabelX || opt.DualX
             h_new(n).Units = 'Pixels';
             
             h(n).Units = 'Pixels';
+            if opt.RemoveXDualTick
+                blank_x = 1;
+            end
         else
             h_new(n) = h(n);
+            if opt.RemoveXTick
+                blank_x = 1;
+            end
         end
-        
+        if blank_x
+            waveValues = '';
+        end
         
         set(h_new(n), 'XTick',eVValues);
         set(h_new(n), 'XTickLabel',waveValues);
@@ -939,7 +954,9 @@ if opt.RelabelX || opt.DualX
     
     if opt.DualX
         %fh.Position(4) = fh.Position(4)*1.15;
-        xlabel(h_new(end), 'Wavelength (nm)','fontsize',opt.FontSize/fig_scaler,'units','normalized');
+        if ~opt.RemoveXDualTick
+            xlabel(h_new(end), 'Wavelength (nm)','fontsize',opt.FontSize/fig_scaler,'units','normalized');
+        end
         
         pause(0.1)
         for n = 1 : length(h)
