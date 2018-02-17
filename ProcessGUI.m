@@ -54,10 +54,17 @@ function ProcessGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for ProcessGUI
 handles.output = hObject;
-
+%% Remove path for testing
+path_dir = {path};
+path_dir = strsplit(path_dir{:},';');
+path_dir = path_dir';
 
 %% Set Defaults
-handles.directory = f_UserPref( 'ProcessGUI' );
+if exist('f_UserPref','file')
+    handles.directory = f_UserPref( 'ProcessGUI' );
+else
+    handles.directory = [pwd,'\'];
+end
 
 handles.autoscale_signal.Value = 1;
 handles.save_path_sub_custom = [];
