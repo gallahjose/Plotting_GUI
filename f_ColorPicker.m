@@ -19,6 +19,14 @@ opt.forceSingle = 0;
 if strcmp(opt.hue,'spectral')
     opt.type = 'qualitative';
 end
+if strcmp(opt.hue,'redblue')
+    opt.type = 'redblue';
+    opt.flip_rb = 0;
+end
+if strcmp(opt.hue,'bluered')
+    opt.type = 'redblue';
+    opt.flip_rb = 1;
+end
 
 
 %% hue lookup table
@@ -59,70 +67,33 @@ elseif strcmpi(opt.type, 'qualitative')
     else
         plotStyles = plotStyles(round(linspace(1,length(plotStyles),numColors)),:);
     end
-elseif strcmpi(opt.type, 'jet')
-%% Jet    
-     %%%%%%%%%%%%%%%%%%%%%%%%
-    %%%  max - dark red  %%%
-    %%%                  %%%
-    %%%  P4 - red        %%%
-    %%%                  %%%
-    %%%  P3 - yellow     %%%
-    %%%                  %%%
-    %%%   (zeroPos)      %%%
-    %%%                  %%%
-    %%%  P2 - teal       %%%
-    %%%                  %%%
-    %%%  P1 - blue       %%%
-    %%%                  %%%
-    %%%  1 - dark blue   %%%
-%     %%%%%%%%%%%%%%%%%%%%%%%%
-%     
-%     ZeroValue = [0.6, 0.6, 0.6];
-%     GreenMax = 0.8;
-%     
-%     zeroPos = round(opt.initialSize/2);
-%     posValues = zeroPos:opt.initialSize;
-%     negValues = 1:zeroPos;
-%     
-%     P4 = posValues(round(4/5*length(posValues)));
-%     P3 = posValues(ceil(2/5*length(posValues)));
-%     P2 = negValues(round(3/5*length(negValues)));
-%     P1 = negValues(ceil(1/5*length(negValues)));
-%     
-%     %1 (min) -> P1
-%     plotStyles(1:P1,1) = linspace(0,0,P1);                                 %Red
-%     plotStyles(1:P1,2) = linspace(0,0,P1);                                 %Green
-%     plotStyles(1:P1,3) = linspace(0.5,1,P1);                               %Blue
-%     %P1 (min) -> P2
-%     plotStyles(P1:P2,1) = linspace(0,0,P2-P1+1);                           %Red
-%     plotStyles(P1:P2,2) = linspace(0,GreenMax,P2-P1+1);                           %Green
-%     plotStyles(P1:P2,3) = linspace(1,1,P2-P1+1);                           %Blue
-%     %P2 - > zeroPos
-%     plotStyles(P2:zeroPos,1) = linspace(0,ZeroValue(1),zeroPos-P2+1);  %Red
-%     plotStyles(P2:zeroPos,2) = linspace(GreenMax,ZeroValue(2),zeroPos-P2+1);  %Green
-%     plotStyles(P2:zeroPos,3) = linspace(1,ZeroValue(3),zeroPos-P2+1);  %Blue
-%     %zeroPos - > P3
-%     plotStyles(zeroPos:P3,1) = linspace(ZeroValue(1),1,P3-zeroPos+1);  %Red
-%     plotStyles(zeroPos:P3,2) = linspace(ZeroValue(2),GreenMax,P3-zeroPos+1);  %Green
-%     plotStyles(zeroPos:P3,3) = linspace(ZeroValue(3),0,P3-zeroPos+1);  %Blue
-%     %P3 - > P4
-%     plotStyles(P3:P4,1) = linspace(1,1,P4 - P3 + 1);                       %Red
-%     plotStyles(P3:P4,2) = linspace(GreenMax,0,P4 - P3 + 1);                       %Green
-%     plotStyles(P3:P4,3) = linspace(0,0,P4 - P3 + 1);                       %Blue
-%     %P4 - > end (max)
-%     plotStyles(P4:end,1) = linspace(1,0.5,opt.initialSize - P4 +1);       %Red
-%     plotStyles(P4:end,2) = linspace(0,0,opt.initialSize - P4 +1);         %Green
-%     plotStyles(P4:end,3) = linspace(0,0,opt.initialSize - P4 +1);         %Blue
-% 
-%     
-%     if numColors > 1
-%         plotStyles = plotStyles(round(linspace(1, opt.initialSize, numColors)),:);
-%     else
-%         plotStyles = plotStyles(round(opt.initialSize/2),:);
-%     end
-    plotStyles = jet(round(opt.initialSize/2)); 
+elseif strcmpi(opt.type, 'redblue')
+    maxGreen = 1;
+    maxRed = 1;
+    maxGreen_blue = 0.9;
+    maxBlue = 1;
+    
+    ps_red = specialred(floor(opt.initialSize/2),maxGreen,maxRed);
+    ps_blue = specialblue(floor(opt.initialSize/2),maxGreen_blue,maxBlue);
+    
+    plotStyles = [
+        flipud(ps_red)
+        ps_blue
+        ];
+    
+    
+    if numColors > 1
+        plotStyles = plotStyles(round(linspace(1, size(plotStyles,1), numColors)),:);
+    else
+        plotStyles = plotStyles(round(opt.initialSize/2),:);
+    end
+    
+    if opt.flip_rb 
+        plotStyles = flipud(plotStyles);
+    end
+    
 elseif strcmpi(opt.type, 'sequential')
-%% Sequential    
+    %% Sequential
     inhsv = 0;
     
     if isnan(opt.hue)
@@ -134,77 +105,17 @@ elseif strcmpi(opt.type, 'sequential')
         opt.reverse = ~opt.reverse;
         
     elseif opt.hue == 0/360 && ~opt.forceSingle
-    %% Special Red    
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%
-        %%%5  max - dark red  %%%
-        %%%                  %%%
-        %%%4  P4 - red        %%%
-        %%%                  %%%
-        %%%2  P3 - yellow     %%%
-        %%%                    %%%
-        %%%0 (zeroPos)- white  %%%
-        %%%%%%%%%%%%%%%%%%%%%%%%
-        
-        numIntervals = opt.initialSize*1.8;
+        %% Special Red
         maxGreen = 1;
         maxRed = 1;
+        plotStyles = specialred(opt.initialSize,maxGreen,maxRed);
         
-        P4 = round(numIntervals*4/5);
-        P3 = round(numIntervals*2/5);
-        zeroPos = 1;
-        
-        plotStyles = zeros(numIntervals,3);
-        %zeroPos - > P3
-        len = P3-zeroPos+1;
-        plotStyles(zeroPos:P3,1) = linspace(0.7,maxRed,len);  %Red
-        plotStyles(zeroPos:P3,2) = linspace(0.7,maxGreen,len);  %Green
-        plotStyles(zeroPos:P3,3) = linspace(0.7,0,len);  %Blue
-        %P3 - > P4
-        len = P4-P3+1;
-        plotStyles(P3:P4,1) = linspace(maxRed,maxRed,len);            %Red
-        plotStyles(P3:P4,2) = linspace(maxGreen,0,len);            %Green
-        plotStyles(P3:P4,3) = linspace(0,0,len);            %Blue
-        %P4 - > end (max)
-        len = numIntervals-P4+1;
-        plotStyles(P4:end,1) = linspace(maxRed,0.7,len);       %Red
-        plotStyles(P4:end,2) = linspace(0,0,len);         %Green
-        plotStyles(P4:end,3) = linspace(0,0,len);         %Blue
-        
-        extraPoints = numIntervals - opt.initialSize;
-        plotStyles = plotStyles(extraPoints:end,:);
         
     elseif opt.hue == 200/360 && ~opt.forceSingle
-    %% Special Blue     
-        numIntervals = opt.initialSize*1.1;
+        %% Special Blue
         maxGreen = 0.95;
         maxBlue = 1;
-        
-        P4 = round(numIntervals*4/5);
-        P3 = round(numIntervals*2/5);
-        zeroPos = 1;
-        
-        plotStyles = zeros(numIntervals,3);
-        %zeroPos - > P3
-        len = P3-zeroPos+1;
-        plotStyles(zeroPos:P3,1) = linspace(0.8,0,len);  %Red
-        plotStyles(zeroPos:P3,2) = linspace(0.8,maxGreen,len);  %Green
-        plotStyles(zeroPos:P3,3) = linspace(0.8,maxBlue,len);  %Blue
-        %P3 - > P4
-        len = P4-P3+1;
-        plotStyles(P3:P4,1) = linspace(0,0,len);            %Red
-        plotStyles(P3:P4,2) = linspace(maxGreen,0,len);            %Green
-        plotStyles(P3:P4,3) = linspace(maxBlue,maxBlue,len);            %Blue
-        %P4 - > end (max)
-        len = numIntervals-P4+1;
-        plotStyles(P4:end,1) = linspace(0,0,len);       %Red
-        plotStyles(P4:end,2) = linspace(0,0,len);         %Green
-        plotStyles(P4:end,3) = linspace(maxBlue,0.7,len);         %Blue
-        
-        extraPoints = numIntervals - opt.initialSize;
-        if extraPoints > 0
-        plotStyles = plotStyles(extraPoints:end,:);
-        end
+        plotStyles = specialblue(opt.initialSize,maxGreen,maxBlue);
     else
         splitPosition = round(opt.minSaturation/(opt.minSaturation + opt.minValue)*opt.initialSize);
         %% Genrates HSV values that span the bounds of given hue with opt.intitialSize steps
@@ -247,3 +158,73 @@ if opt.reverse
     plotStyles = flipud(plotStyles);
 end
 
+function plotStyles = specialred(initialSize,maxGreen,maxRed)
+
+numIntervals = initialSize*1.8;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%5  max - dark red  %%%
+%%%                  %%%
+%%%4  P4 - red        %%%
+%%%                  %%%
+%%%2  P3 - yellow     %%%
+%%%                    %%%
+%%%0 (zeroPos)- white  %%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+P4 = round(numIntervals*4/5);
+P3 = round(numIntervals*2/5);
+zeroPos = 1;
+
+plotStyles = zeros(numIntervals,3);
+%zeroPos - > P3
+len = P3-zeroPos+1;
+plotStyles(zeroPos:P3,1) = linspace(0.7,maxRed,len);  %Red
+plotStyles(zeroPos:P3,2) = linspace(0.7,maxGreen,len);  %Green
+plotStyles(zeroPos:P3,3) = linspace(0.7,0,len);  %Blue
+%P3 - > P4
+len = P4-P3+1;
+plotStyles(P3:P4,1) = linspace(maxRed,maxRed,len);            %Red
+plotStyles(P3:P4,2) = linspace(maxGreen,0,len);            %Green
+plotStyles(P3:P4,3) = linspace(0,0,len);            %Blue
+%P4 - > end (max)
+len = numIntervals-P4+1;
+plotStyles(P4:end,1) = linspace(maxRed,0.7,len);       %Red
+plotStyles(P4:end,2) = linspace(0,0,len);         %Green
+plotStyles(P4:end,3) = linspace(0,0,len);         %Blue
+
+extraPoints = numIntervals - initialSize;
+plotStyles = plotStyles(extraPoints:end,:);
+
+
+function plotStyles = specialblue(initialSize,maxGreen,maxBlue)
+
+
+numIntervals = initialSize*1.1;
+
+P4 = round(numIntervals*4/5);
+P3 = round(numIntervals*2/5);
+zeroPos = 1;
+
+plotStyles = zeros(numIntervals,3);
+%zeroPos - > P3
+len = P3-zeroPos+1;
+plotStyles(zeroPos:P3,1) = linspace(0.8,0,len);  %Red
+plotStyles(zeroPos:P3,2) = linspace(0.8,maxGreen,len);  %Green
+plotStyles(zeroPos:P3,3) = linspace(0.8,maxBlue,len);  %Blue
+%P3 - > P4
+len = P4-P3+1;
+plotStyles(P3:P4,1) = linspace(0,0,len);            %Red
+plotStyles(P3:P4,2) = linspace(maxGreen,0,len);            %Green
+plotStyles(P3:P4,3) = linspace(maxBlue,maxBlue,len);            %Blue
+%P4 - > end (max)
+len = numIntervals-P4+1;
+plotStyles(P4:end,1) = linspace(0,0,len);       %Red
+plotStyles(P4:end,2) = linspace(0,0,len);         %Green
+plotStyles(P4:end,3) = linspace(maxBlue,0.7,len);         %Blue
+
+extraPoints = numIntervals - initialSize;
+if extraPoints > 0
+    plotStyles = plotStyles(extraPoints:end,:);
+end
