@@ -46,6 +46,7 @@ data(isinf(data)) = nan;
 %% Determines if user wants a surface or plot
 opt.JetType = 'Jet';
 opt.JetSymmetric = 0;
+opt.is_surf = 0;
 if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargin{1})
     %Surface Plot
     
@@ -72,6 +73,8 @@ if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargi
     
     
     varargin = [varargin,{'TickWidth'},0.5];
+    
+    opt.is_surf = 1;
 else
     if size(xAxes,2) ~= 1, xAxes = xAxes'; end
     if size(data,1) ~= size(xAxes,1), data = data'; end
@@ -147,6 +150,7 @@ opt.addspacingZ = 0;
 opt.addspacingX = 0;
 opt.addspacingY = 0;
 opt.FlipX = 0;
+opt.FlipY = 0;
 opt.ShrinkAxes = 1;
 opt.colorShrink = 2;
 % Surface Only Options
@@ -212,7 +216,12 @@ if ~any(strcmpi(varargin,{'YLabel'}))
         if ~any(strcmpi(varargin,{'RelabelY'})) && ~any(strcmpi(varargin,{'RelabelX'}))
             opt.YLabel = 'Photon Energy (eV)';
         end
-        opt.FlipX = 1;
+        if opt.is_surf
+            opt.FlipY = 1;
+        else
+            opt.FlipX = 1;
+        end
+        
     elseif yAxes(1) == 0
         opt.YLabel = 'Pixel';
     end
@@ -251,6 +260,9 @@ end
 
 %% Other options...
 if opt.FlipX
+    opt.V2 = opt.V2 - 180;
+end
+if opt.FlipY
     opt.V2 = opt.V2 - 180;
 end
 if strcmpi(opt.PointStyle,'.')
