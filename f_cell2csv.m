@@ -1,5 +1,5 @@
 
-function f_cell2csv(filename,cellArray,delimiter)
+function f_cell2csv(filename,cellArray,delimiter,append)
 % Writes cell array content into a *.csv file.
 % 
 % CELL2CSV(filename,cellArray,delimiter)
@@ -13,8 +13,17 @@ function f_cell2csv(filename,cellArray,delimiter)
 if nargin<3
     delimiter = ',';
 end
+if nargin<4
+    append = 0;
+end
 
-datei = fopen(filename,'w');
+if append 
+    open_type = 'a';
+else
+    open_type = 'w';
+end
+
+datei = fopen(filename,open_type);
 for z=1:size(cellArray,1)
     for s=1:size(cellArray,2)
 
