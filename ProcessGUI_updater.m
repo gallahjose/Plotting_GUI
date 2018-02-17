@@ -120,7 +120,7 @@ if ~isempty(opt.make)
         units_config = 2;
         crop_values = [str2num(handles.data_config.Data{1,1}), str2num(handles.data_config.Data{1,2})];
         
-        if handles.spectra_bg_show.Value
+        if handles.spectra_bg_show.Value && isfield(handles.RunDetails,'Background')
             add_spectra = handles.RunDetails.Background;
         else
             add_spectra = [];
