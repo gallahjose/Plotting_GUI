@@ -26,7 +26,7 @@ opt.xPadding = 90; %px
 opt.xLeftOffset = 0; %px
 opt.xRightOffset = 20; %px
 
-opt.yPadding = 90; %px
+opt.yPadding = 100; %px
 opt.yTopOffset = 10; %px
 opt.yBottomOffset = 0; %px
 
@@ -54,7 +54,6 @@ opt.axesWidth = [];
 opt.axesNumTxt = [{'A'},'B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 % never again will there be no labels for axis (aslong as there is less than 104 axis)
 opt.axesNumTxt = [opt.axesNumTxt, strcat('A',opt.axesNumTxt),strcat('B',opt.axesNumTxt),strcat('C',opt.axesNumTxt)];
-opt.axesNumTxt = lower(opt.axesNumTxt);
 opt.axesNumTxtAppend = [];
 opt.axesNumTxtPre = [];
 opt.LeftLabel = [];
@@ -63,16 +62,22 @@ opt.numAxesfontSize = 0;
 opt.numAxesYoffset = 0;
 opt.numAxesXoffset = 0;
 
+opt.external_labels = 0;
+
 opt.xfigShift = 0;
 opt.xfigIncrease = 0;
 
 opt.defaultMonitor = 2;
 opt.maxAxes = inf;
 
+opt.lowerNumAxes = 1;
 
 opt.LineWidth = 1.5;
 %%%%% User options set
 [opt] = f_OptSet(opt, varargin);
+if ~any(strcmp('titleSize',opt))
+    opt.titleSize = opt.fontSize*1.25;
+end
 
 titleH = [];
 
@@ -102,10 +107,16 @@ if ~isempty(opt.figTitle)
     opt.figTitle = regexprep(opt.figTitle,'(?<!\\)}','');
 end
 
+%% Lower case axes number text
+if opt.lowerNumAxes
+    opt.axesNumTxt = lower(opt.axesNumTxt);
+    opt.axesNumTxt = strcat(opt.axesNumTxt,'.');
+end
 %% append additional axes number text
-if ~isempty(opt.axesNumTxtAppend)
+if ~isempty(opt.axesNumTxtAppend) && ~opt.external_labels
     if size(opt.axesNumTxtAppend,1) > 1 opt.axesNumTxtAppend = opt.axesNumTxtAppend'; end
-    opt.axesNumTxt(1:length(opt.axesNumTxtAppend)) = strcat(opt.axesNumTxt(1:length(opt.axesNumTxtAppend)),{'. '},opt.axesNumTxtAppend);
+    opt.axesNumTxt(1:length(opt.axesNumTxtAppend)) =...
+        strcat(opt.axesNumTxt(1:length(opt.axesNumTxtAppend)),{' '},opt.axesNumTxtAppend);
 end
 opt.axesNumTxt = [opt.axesNumTxtPre,opt.axesNumTxt];
 
@@ -144,9 +155,12 @@ opt.xPadding = xPaddingNew;
 
 yPaddingNew = ones(size(opt.rowStyles,1)+1,1).*opt.yPadding(end);
 yPaddingNew(1:length(opt.yPadding)) = opt.yPadding;
+
 yPaddingNew(1) = yPaddingNew(1) + opt.yBottomOffset;
 yPaddingNew(end) = opt.yTopOffset;
+
 opt.yPadding = yPaddingNew;
+
 
 opt = rmfield(opt,'xLeftOffset');
 opt = rmfield(opt,'xRightOffset');
@@ -187,7 +201,6 @@ if ~any(strcmpi(varargin,'figPos'))
         
         opt.figPos(3) = opt.axesWidth*numColumns + sum(opt.xPadding);
         opt.figPos(4) = opt.axesHeight*(size(opt.rowStyles,1)-0.5*sum(all(correct,2))) + sum(opt.yPadding);
-
     end
 end
 
@@ -307,6 +320,10 @@ for j = 1 : numRows
         end
         
         if n == 1 && ~isempty(opt.LeftLabel) && length(opt.LeftLabel) >= j
+            if ~exist('ht_index','var')
+                ht_index = 1;
+            end
+                
             xlim=get(gca,'XLim');
             ylim=get(gca,'YLim');
             axSize = get(gca,'position');
@@ -314,23 +331,65 @@ for j = 1 : numRows
             pixelScaler = axSize(3)/(xlim(2)-xlim(1));
             zeroPos = -axSize(1)/pixelScaler;
             
-            ht = text(zeroPos + (opt.LeftLabelOffset/opt.figPos(3))/pixelScaler,(ylim(2)-ylim(1))*0.5,...
+            ht(ht_index) = text(zeroPos + (opt.LeftLabelOffset/opt.figPos(3))/pixelScaler,(ylim(2)-ylim(1))*0.5,...
                 opt.LeftLabel{j},'Rotation',90,'HorizontalAlignment','center','FontWeight','bold','FontSize', opt.fontSize);
-            set(ht,'units','normalized')
+            set(ht(ht_index),'units','normalized')
+            ht_index = ht_index + 1;
         end
+        
         if opt.numAxes
-            
             if ~isempty(opt.axesNumTxt{(j-1)*numColumns + n})
                 if ~exist('tbh_index','var')
                     tbh_index = 1;
                 end
-                tbh(tbh_index) = annotation(fh,'textbox',[x, y_temp + height_temp, 0.2, 0.04,],'VerticalAlignment','middle','FaceAlpha',0.9,'EdgeColor',...
-                    'w','HorizontalAlignment', 'left', 'FontSize', opt.numAxesfontSize, 'FontWeight', 'bold','Interpreter','tex',...
-                    'Margin',0,'LineStyle','none','FitBoxToText', 'on','BackgroundColor',[1,1,1],'String',opt.axesNumTxt{(j-1)*numColumns + n});  
+                tbh(tbh_index) = annotation(fh,'textbox',[x, y_temp + height_temp, 0.013, 0.028,],...
+                    'VerticalAlignment','middle','FaceAlpha',0.9,'EdgeColor',...
+                    'w','HorizontalAlignment', 'left', 'FontSize', opt.numAxesfontSize,...
+                    'FontWeight', 'bold','Interpreter','tex','Margin',0,'LineStyle','none',...
+                    'FitBoxToText', 'on','BackgroundColor',[1,1,1],'String',strtrim(opt.axesNumTxt{(j-1)*numColumns + n}));  
                 pause(1/1000)
-                tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) + 5/opt.figPos(3);
-                tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(end) - tbh(tbh_index).Position(4)*1.5;
+                
+                if opt.external_labels
+                    % outside top
+                    if ~isempty(opt.axesNumTxtAppend)
+                        add_str = opt.axesNumTxtAppend{(j-1)*numColumns + n};
+                        if ~isempty(add_str)
+                            tbh_2(tbh_index) = annotation(fh,'textbox',[x, y_temp + height_temp, 0.2, 0.01,],...
+                                'VerticalAlignment','middle','FaceAlpha',0.9,'EdgeColor',...
+                                'w','HorizontalAlignment', 'left', 'FontSize', opt.numAxesfontSize,...
+                                'FontWeight', 'bold','Interpreter','tex','Margin',0,'LineStyle','none',...
+                                'FitBoxToText', 'on','BackgroundColor',[1,1,1],'String',strtrim(add_str));
+                            tbh_2(tbh_index).FitBoxToText = 'on';
+                            pause(1/1000);
+                            
+                            tbh_2(tbh_index).Position(4) = tbh_2(tbh_index).Position(4)*0.8;
+                            h_tbh_pos = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(4) - tbh_2(tbh_index).Position(4) - 0.035*h(axisPlotted+1).Position(4);
+                            
+                            tbh_2(tbh_index).Position(2) = h_tbh_pos;
+                            
+                            tbh_2(tbh_index).Position(1) = h(axisPlotted+1).Position(1) + 10/opt.figPos(3);
+                            
+                            h_tbh_height = tbh_2(tbh_index).Position(4);
+                            
+                            font_scalar = 1;
+                        end
+                    else
+                        h_tbh_pos = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(4) - 4/opt.figPos(4);
+                        h_tbh_height = 0;
+                        font_scalar = 1.2;
+                    end
+                    tbh_width = tbh(tbh_index).Position(3);
+                    tbh(tbh_index).Position(3) = 0;
+                    tbh(tbh_index).Position(4) = h_tbh_height;
+                    tbh(tbh_index).FontSize = tbh(tbh_index).FontSize.*font_scalar;
+                    tbh(tbh_index).Position(2) = h_tbh_pos;
+                    tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) - tbh_width/0.75;
+                else
+                    tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(4) - tbh(tbh_index).Position(4) - 0.01*h(axisPlotted+1).Position(4);
+                    tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) + 10/opt.figPos(3);
+                end
                 tbh_index = tbh_index + 1;
+                pause(1/1000); 
             end
         else
            tbh = []; 
@@ -346,6 +405,11 @@ for j = 1 : numRows
     %half_correction = 0.5*height*sum(all(correct(1:j),2));
 end
 
+%% Reposition left labesl
+% if exist('ht_index','var')
+% end
+
+%% Trims to just h plotted
 h = h(arrayfun(@isgraphics,h(:)));
 fontSize = opt.fontSize;
 

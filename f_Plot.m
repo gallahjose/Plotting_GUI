@@ -60,14 +60,14 @@ if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargi
         varargin = [];
     end
     
-    if max(data(:)) > 100
-        %opt.JetType = 'TRPL';
+    if max(data(:)) > 1000
+        opt.JetType = 'TRPL';
         opt.JetSymmetric = 0;
     end
     
     plotSurf = 1;
     useTime = 1;
-    xRightOffset = 80;
+    xRightOffset = 90;
     xPadding = 90;
     
     
@@ -128,6 +128,7 @@ opt.PlotZero = 1;
 opt.RelabelY = 0;
 opt.RelabelX = 0;
 opt.DualX = 0;
+opt.DualSpacing = 1;
 opt.RescaleData = 1;
 opt.SI_Scalar = 0;
 opt.IntegerIntensity = 0;
@@ -182,7 +183,7 @@ opt.UiStack = 0;
 opt.log_scale = 0;
 
 opt.grid = 'on';
-
+opt.updateZLabel = 1;
 tickH = [];
 
 %% Logically Determins Options
@@ -380,7 +381,7 @@ if opt.RescaleData
     elseif abs(opt.SI_Scalar) > 1
         data = data/10^(opt.SI_Scalar);
         opt.ZLim = opt.ZLim/10^(opt.SI_Scalar);
-        if ~isempty(opt.ZLabel)
+        if ~isempty(opt.ZLabel) && opt.updateZLabel
             opt.ZLabel = [opt.ZLabel, ' (\times10^{',num2str(opt.SI_Scalar),'})'];
         end
     end
@@ -446,8 +447,14 @@ if ~ishandle(axesName(end)) || ~strcmpi('axes', get(axesName(end),'type')) %if g
             'xRightOffset', xRightOffset,'xPadding',xPadding,...
             opt.FigureOptions{:});
     else
+        if opt.DualX
+            yTopOffset = 100;
+        else
+            yTopOffset = 10;
+        end
+        
         [h, fh]  = f_MultiLinLogAxes( 1, axesName(1), 'rowStyles', {'Linear'}, 'title', opt.Title, 'figTitle', opt.FigureTitle,...
-            'fontSize',opt.FontSize*opt.FontScaler,...
+            'fontSize',opt.FontSize*opt.FontScaler,'yTopOffset',yTopOffset,...
             'xRightOffset', xRightOffset,'xPadding',xPadding,...
             opt.FigureOptions{:});
     end
@@ -522,13 +529,13 @@ if ~opt.Hold
         units = get(h(end),'units');
         colorbar(h(end),'off')
         ch = colorbar('peer',h(end),'eastoutside','units',units);
-        ylabel(ch, opt.ZLabel,'fontsize',opt.FontSize);
+        ylabel(ch, opt.ZLabel,'fontsize',opt.FontSize/fig_scaler);
         if opt.ColorBar && opt.IntegerIntensity
             YTickLabel = cellstr(get(ch, 'YTickLabel'));
             YTickLabel(cellfun(@length,YTickLabel)> 2) = {''};
             set(ch, 'YTickLabel',cellstr(YTickLabel));
         end
-        set(ch, 'LineWidth', opt.TickWidth,'fontsize',opt.FontSize*opt.FontScaler);
+        set(ch, 'LineWidth', opt.TickWidth,'fontsize',opt.FontSize*opt.FontScaler/fig_scaler);
         
         colorPos = get(ch, 'position');
         colorPos(3) = colorPos(3)/opt.colorShrink;
@@ -545,6 +552,7 @@ if ~opt.Hold
         end
         colorPos(1) = axesPos(1) + axesPos(3) + 0.5*colorPos(3);
         set(ch,'position',colorPos);
+        pause(0.1);
     end
     %options if there are two plots
     if opt.TwoPlots %%
@@ -600,6 +608,9 @@ if ~opt.Hold
             linear_label = strrep(linear_label,'-0','-');
         end
         h(1).XTickLabel{end} = linear_label;
+        if length(h(1).XTickLabel) == 4
+           h(1).XTickLabel{3} = '0.5';
+        end
         
         
     else
@@ -725,8 +736,10 @@ else %one plot
             set(s(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
                 'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
                 opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
-        
+            uistack(s(n),'top');
         end
+        
+        
         if opt.RemoveLegend
             annotation = get(s, 'Annotation');
             if length (annotation) > 1
@@ -737,6 +750,7 @@ else %one plot
                 set(get(annotation, 'LegendInformation'), 'IconDisplayStyle', 'off')
             end
         end
+        
     end
 end
 
@@ -752,7 +766,7 @@ if opt.UiStack
             uistack(s_2(j), 'bottom') 
         end
     end
-    if exist('s','var')
+    if exist('s','var') && s(1) ~= 0
         for j = 1 : size(s,1)
             uistack(s(j), 'bottom') 
         end
@@ -846,21 +860,16 @@ if opt.RelabelY
     set(h(1), 'YTickLabel',waveValues);
 end
 %% options for xLabes (i.e if in eV but want wavelength)
-if opt.RelabelX || opt.DualX
+if (opt.RelabelX || opt.DualX) && ~opt.Hold
     %% Calculate new spacing
-    %ev_step = 0.2;
-    wave_step = 50;
-    eVRange = [min(xAxes),max(xAxes)];
+    % makes wave axis with minium spacin gof 50 nm
+    wave_step = 50; %./opt.DualSpacing;
+    wave_step = round(wave_step,-1);
+    eVRange = h.XLim;
     waveRange = 1240./eVRange;
-    
-    %eVValues = [eVRange(1)/ev_step:1:eVRange(2)/ev_step]*ev_step;
-    
     waveValues = [ceil(waveRange(2)/wave_step):1:ceil(waveRange(1)/wave_step)]*wave_step;
     
-    %waveValues =1240./eVValues;
-    %waveValues = round(waveValues/25)*25;
-    %eVValues =1240./waveValues;
-    
+    % sets the minimum spacing for different wavelength regions
     wave_range = [
     0, 10
     500, 50
@@ -870,11 +879,10 @@ if opt.RelabelX || opt.DualX
     2000, 800
     6000, 1200
     ];
-    
+    wave_range(:,2) = wave_range(:,2)/opt.DualSpacing; 
     n = 1;
     while n < length(waveValues)
         wr_i = find(waveValues(n) >= wave_range(:,1),1,'last');
-        
         remove = true;
         while remove
             if n+1 <=length(waveValues)
@@ -949,8 +957,9 @@ if opt.RelabelX || opt.DualX
         
         set(h_new(n), 'XTick',eVValues);
         set(h_new(n), 'XTickLabel',waveValues);
+        
+        %uistack(h_new(n),'bottom');
     end
-    
     
     if opt.DualX
         %fh.Position(4) = fh.Position(4)*1.15;
@@ -963,7 +972,6 @@ if opt.RelabelX || opt.DualX
             h_new(n).Units = 'normalized';
             h(n).Units = 'normalized';
         end
-        
     end
 end
 
@@ -1051,6 +1059,8 @@ if opt.log_scale && plotSurf
     ch_ticks = strcat('10^{',ch_ticks,'}');
     ch.TickLabels = ch_ticks;
 end
+
+%% Brings focus back to the data axes
 
 %% Updates Figure data
 %fig_data.Hold = 1;

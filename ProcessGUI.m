@@ -22,7 +22,7 @@ function varargout = ProcessGUI(varargin)
 
 % Edit the above text to modify the response to help ProcessGUI
 
-% Last Modified by GUIDE v2.5 30-Aug-2017 08:46:20
+% Last Modified by GUIDE v2.5 31-Aug-2017 12:52:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -970,3 +970,21 @@ function spectra_bg_show_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of spectra_bg_show
+
+
+% --- Executes on button press in leg_beside.
+function leg_beside_Callback(hObject, eventdata, handles)
+% hObject    handle to leg_beside (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of leg_beside
+
+
+% --- Executes on button press in dual_xLabels.
+function dual_xLabels_Callback(hObject, eventdata, handles)
+% hObject    handle to dual_xLabels (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of dual_xLabels

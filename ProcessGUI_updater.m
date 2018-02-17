@@ -374,14 +374,45 @@ if ~isempty(opt.plot)
         hold_state = 1;
         if n==1, hold_state =0; end
         
-        opt.plot_handles = f_Plot(traces_plot(n).trace, traces_plot(n).x_axis, opt.plot_handles, 'PlotStyles', traces_plot(n).color ,...
+        if isa(opt.plot_handles,'double') && ~isempty(strfind(opt.plot,'Spectra')) &&  handles.dual_xLabels.Value
+            DualX = 1;
+        else
+            DualX = 0;
+        end
+        
+        % add more spacing to move lenged into
+        if strfind(opt.plot,'external')
+            
+        else
+            
+            
+        end
+        
+        [opt.plot_handles, ~, ~, fh] = f_Plot(traces_plot(n).trace, traces_plot(n).x_axis, opt.plot_handles, 'PlotStyles', traces_plot(n).color ,...
             'Hold', hold_state,'YLim',ZLim,'FontSize',FontSize,'DisplayName',traces_plot(n).label{label_type},...
             'PointStyle',traces_plot(n).markerstyle, 'LineStyle', traces_plot(n).linestyle, 'MarkerSize', traces_plot(n).markersize,...
-            'LineWidth', traces_plot(n).linewidth, 'FigureTitle', string, 'XLim', XLim, 'ZLabel', ZLabel);
+            'LineWidth', traces_plot(n).linewidth, 'FigureTitle', string, 'XLim', XLim, 'ZLabel', ZLabel,'DualX',DualX);
     end
     
     if strfind(opt.plot,'external')
-        legend('show', 'Location', 'best')
+        leg_hand = legend(opt.plot_handles(end),'show', 'Location', 'best');
+        if handles.leg_beside.Value
+            % grow figures size to fit legend
+            fh.Units = 'pixels';
+            child_ax = fh.Children;
+            for n = 1 : length(child_ax)
+                child_ax(n).Units = 'pixel';
+            end
+            pause(0.1)
+            leg_size = leg_hand.Position(3);
+            fh.Position(3) = fh.Position(3) + leg_size + 10;
+            leg_hand.Position(1) = opt.plot_handles(end).Position(1) + opt.plot_handles(end).Position(3) + 20;
+            leg_hand.Position(2) = opt.plot_handles(end).Position(2) + opt.plot_handles(end).Position(4) - leg_hand.Position(4);
+            for n = 1 : length(child_ax)
+                child_ax(n).Units = 'normalized';
+            end
+            fh.Units = 'normalized';
+        end
     end
 end
 
@@ -484,7 +515,7 @@ if ~isempty(opt.save)
         mkdir(handles.save_dir);
     end
     
-    if opt.save == 1000000; %if saving surface
+    if opt.save == 1000000 %if saving surface
         saveas(opt.save,[handles.save_dir,handles.data_name_box.String, '_Surface.fig'])
         print(opt.save,[handles.save_dir,handles.data_name_box.String,'_Surface'], '-dpng', '-r0')
         
