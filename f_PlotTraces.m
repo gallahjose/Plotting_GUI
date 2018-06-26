@@ -32,11 +32,11 @@ function h = f_PlotTraces(traces, xAxes, axesName, varargin)
 %                      allows for multiple plots to same axes
 
 %% Check input varibales
-if ~exist('axesName','var'), axesName = 100000; end
+if ~exist('axesName','var'), axesName = 1; end
 if ~exist('xAxes','var'), xAxes = 1:size(traces,2); end
 
 
-if size(xAxes,2) > 1, xAxes = xAxes'; end
+if size(xAxes,1) ~= size(xAxes,1), traces = traces'; end
 if size(traces,1) ~= size(xAxes,1), traces = traces'; end
 
 h = axesName;
@@ -45,14 +45,10 @@ h = axesName;
 % default options
 opt.reversePlotStyle = 1;
 opt.onePlotScale = 'linear';
-
-opt.plot_styles = [];
-opt.ctype = 'seq';
-opt.cname = [];
-
+opt.plot_styles = f_ColorPicker( size(traces,2),'type','qualitative');
 opt.title = [];
-opt.YLabel = '\DeltaT/T';
-opt.legend = {};
+opt.Ylabel = 'm(\DeltaT/T)';
+opt.traceLabel = {};
 opt.YLimits = [min(min(traces)), max(max(traces))];
 opt.XLimits = [min(xAxes), max(xAxes)];
 opt.hold = 0;
@@ -61,10 +57,10 @@ opt.figTitle = '';
 opt.twoPlots = 0;
 
 opt.ZeroColor = [0 0 0];
-opt.MarkerStyle = '.';
-opt.LineStyle = '-';
+opt.PointStyle = '.';
+opt.LineStyle = '';
 opt.LineWidth = 2.5;
-opt.MarkerSize = 5;
+opt.MarkerSize = 10;
 opt.TickLength = [0.02, 0.02];
 opt.TickWidth = 0.5;
 opt.DisplayName = 'no_name';
@@ -79,7 +75,7 @@ if xAxes(1) == 0,
     opt.Xlabel = 'Pixel';
 elseif xAxes(1) < 0 || xAxes(end) < 0.01,
     opt.Xlabel = 'Time (s)';
-elseif xAxes(end) < 10
+elseif xAxes(end) < 1
     opt.Xlabel = 'Energy (eV)';
 else
     opt.Xlabel = 'Wavelength (nm)';
@@ -87,8 +83,8 @@ end
 %% Detects if two plots are needed
 [opt] = f_OptSet(opt, varargin);
 opt.twoPlots = 0;
-if xAxes(1) < 0 || xAxes(end) < 0.01
-%     opt.figTitle = 'Kinetic';
+if (xAxes(1) < 0 || xAxes(end) < 0.01) && max(abs(xAxes)) < 10
+    opt.figTitle = 'Kinetic';
     opt.twoPlots = 1;
     [~,xAxesMinIndex] = min(abs(xAxes));
     if xAxes(1) > 0
@@ -104,7 +100,7 @@ if xAxes(1) < 0 || xAxes(end) < 0.01
     end
     
 else
-%     opt.figTitle = 'Spectra';
+    opt.figTitle = 'Spectra';
 end
 %% sets default scaling for fs and ps pump data
 [~,zeroIndex] = min(abs(xAxes));
@@ -112,7 +108,7 @@ if zeroIndex > length(xAxes)-2, zeroIndex = zeroIndex - 2; end
 
 if xAxes(zeroIndex+2)-xAxes(zeroIndex+1) > 200E-15 %checks the minimum spacing between time points is greater than 200 fs
     opt.tlin = 1E-9;
-    opt.tscale = 1;
+    opt.tscale = 2.5;
     opt.tlinAxis = 'Time (ns)';
 else
     opt.tlin = 1E-12;
@@ -123,18 +119,6 @@ end
 %& user input (after autodetection to allow user options)
 [opt] = f_OptSet(opt, varargin);
 
-if strcmp(opt.ctype, 'seq') && ~sum(strcmp(opt.cname,varargin))
-    opt.cname = 'Blues';
-elseif strcmp(opt.ctype, 'div') && ~sum(strcmp(opt.cname,varargin))
-    opt.cname = 'Spectral';
-elseif strcmp(opt.ctype, 'qual') && ~sum(strcmp(opt.cname,varargin))
-    opt.cname = 'Set1';
-end
-
-if ~sum(strcmp('plot_styles',varargin))
-    opt.plot_styles = f_Colorbrewer(opt.ctype, opt.cname, size(traces,2));
-end
-
 if opt.tlin == 1E-12 && xAxes(end) > 1E-6;
     linLogFraction = 0.15;
 else
@@ -142,6 +126,7 @@ else
 end
 
 if ~isempty(traces)
+    
     %% Checks Options
     if opt.YLimits(1) == opt.YLimits(2), opt.YLimits = [opt.YLimits(1)*0.8, opt.YLimits(1)*1.2]; end
     if opt.XLimits(1) == opt.XLimits(2), opt.XLimits = [opt.XLimits(1)*0.8, opt.XLimits(1)*1.2]; end
@@ -151,14 +136,6 @@ if ~isempty(traces)
     opt.YLimits = sort(opt.YLimits);
     opt.XLimits = sort(opt.XLimits);
     
-    %% Rescale data and append label
-    SI_Scalar = round(log10(max(abs(opt.YLimits))));
-    if abs(SI_Scalar) > 1
-    opt.YLabel = [opt.YLabel, '(\times10^{',num2str(SI_Scalar),'})'];
-    traces = traces/10^(SI_Scalar);
-    opt.YLimits = opt.YLimits/10^(SI_Scalar);
-    end
-       
     if iscell(opt.title), opt.title = opt.title{1}; end
     
     if isempty(opt.Xlabel), opt.tlinAxis = []; end
@@ -166,17 +143,12 @@ if ~isempty(traces)
     %% selects the correct axis, either in the GUI or a new FIGURE
     if ~ishandle(axesName(1)) || ~strcmp('axes', get(axesName(1),'type')) %if given figure or invalid handle
         axesName = floor(axesName(1));
-        %         figTitle = strfind(opt.title, opt.figTitle);
-        %         figTitle = opt.title(1:figTitle-2);
-        if ~isempty(opt.title)
-        opt.title = strrep(opt.title, '_', ' ');
-        end
-        figTitle = opt.title;
-        
+        figTitle = strfind(opt.title, opt.figTitle);
+        figTitle = opt.title(1:figTitle-2);
         if opt.twoPlots
-            h  = f_MultiLinLogAxes( 1, axesName, 'rowStyles', {'LinLog'}, 'title', opt.title, 'figTitle', figTitle,'fontSize',opt.fontSize*opt.tickScaler,'linLogFraction',linLogFraction);
+            h  = f_MultiLinLogAxes( 1, axesName, 'rowStyles', {'LinLog'}, 'title', opt.title, 'figTitle', [opt.figTitle,': ',figTitle],'titleSize',opt.fontSize,'linLogFraction',linLogFraction);
         else
-            h  = f_MultiLinLogAxes( 1, axesName, 'rowStyles', {'Linear'}, 'title', opt.title, 'figTitle', figTitle,'fontSize',opt.fontSize*opt.tickScaler);
+            h  = f_MultiLinLogAxes( 1, axesName, 'rowStyles', {'Linear'}, 'title', opt.title, 'figTitle', [opt.figTitle,': ',figTitle],'titleSize',opt.fontSize);
         end
     else % loads the axes handles into variables
         if opt.twoPlots && length(axesName) > 2
@@ -202,9 +174,9 @@ if ~isempty(traces)
             hold(h(n),'on')
             box(h(n), 'on');
             grid(h(n), 'on');
-            set(h(n), 'ColorOrder', opt.plot_styles, 'YLim', opt.YLimits, 'TickLength',opt.TickLength, 'LineWidth', opt.TickWidth);
+            set(h(n), 'ColorOrder', opt.plot_styles, 'YLim', opt.YLimits, 'TickLength',opt.TickLength, 'LineWidth', opt.TickWidth, 'FontSize', opt.fontSize*opt.tickScaler);
         end
-        ylabel(h(1), opt.YLabel, 'fontsize',opt.fontSize)
+        ylabel(h(1), opt.Ylabel, 'fontsize',opt.fontSize)
         xlabh = xlabel(h(end), opt.Xlabel,'fontsize',opt.fontSize);
         %options if there are two plots
         if opt.twoPlots %%
@@ -212,7 +184,7 @@ if ~isempty(traces)
                 'XLim', [opt.tlin*opt.tscale, opt.XLimits(end)], ...
                 'xscale', 'log');
             set(h(1),'XTick',-1*opt.tscale:opt.tscale/2:3, ...
-                'XTickLabel',{num2str(-1*opt.tscale),num2str(-0.5*opt.tscale), '0', '', ''}, ...
+                'XTickLabel',{num2str(-1*opt.tscale),'', '0', '', ''}, ...
                 'XLim', [-1*opt.tscale, opt.tscale],...
                 'xscale', 'linear');
             xlabh2 = xlabel(h(1), opt.tlinAxis,'fontsize',opt.fontSize);
@@ -243,16 +215,16 @@ if ~isempty(traces)
         end
         
         %Linear plot
-        plot(h(1), xAxes(lin_index_min:lin_index_max)/opt.tlin, traces((lin_index_min:lin_index_max),:), [opt.MarkerStyle opt.LineStyle],...
-            'linewidth', opt.LineWidth, 'MarkerSize', opt.MarkerSize)
+        plot(h(1), xAxes(lin_index_min:lin_index_max)/opt.tlin, traces((lin_index_min:lin_index_max),:), [opt.PointStyle opt.LineStyle],...
+            'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize)
         %Log plot
-        plot(h(2),xAxes(lin_index_max-2:end), traces((lin_index_max-2:end),:), [opt.MarkerStyle opt.LineStyle],...
-            'linewidth', opt.LineWidth, 'MarkerSize', opt.MarkerSize,'DisplayName',opt.DisplayName)
-        if ~isempty(opt.legend), legend(h(end), opt.legend, 'location', 'Best'); end
+        plot(h(2),xAxes(lin_index_max-2:end), traces((lin_index_max-2:end),:), [opt.PointStyle opt.LineStyle],...
+            'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize,'DisplayName',opt.DisplayName)
+        if ~isempty(opt.traceLabel), legend(h(end), opt.traceLabel, 'location', 'Best'); end
     else % one plot
-        plot(h(end), xAxes, traces, [opt.MarkerStyle opt.LineStyle],...
-            'linewidth', opt.LineWidth, 'MarkerSize', opt.MarkerSize,'DisplayName',opt.DisplayName)
-        if ~isempty(opt.legend), legend(h(1), opt.legend,'location', 'Best'); end
+        plot(h(end), xAxes, traces, [opt.PointStyle opt.LineStyle],...
+            'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize,'DisplayName',opt.DisplayName)
+        if ~isempty(opt.traceLabel), legend(h(1), opt.traceLabel); end
     end
     
     %% turns off axees hold, and plotZero line if needed

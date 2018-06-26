@@ -27,7 +27,7 @@ opt.xLeftOffset = 0; %px
 opt.xRightOffset = 20; %px
 
 opt.yPadding = 100; %px
-opt.yTopOffset = 10; %px
+opt.yTopOffset = 50; %px
 opt.yBottomOffset = 0; %px
 
 opt.rowStyles = {'Linear'};
@@ -129,10 +129,21 @@ pause(100/1000);
 % Get screen size
 screen_size = get(0, 'MonitorPositions');
 if opt.defaultMonitor > size(screen_size,1), opt.defaultMonitor = size(screen_size,1); end
+% pick largest monios
+pixels = screen_size(:,3).*screen_size(:,4);
+if length(pixels) > 1
+    [max_value, max_i] = max(pixels);
+    max_i = find(max_i);
+    if pixels(opt.defaultMonitor) ~= max_value
+        opt.defaultMonitor = max_i(1);
+    end
+end
 screen_size = screen_size(opt.defaultMonitor,:);
 % Set title
 if ~isempty(opt.figTitle), set(fh,'name', opt.figTitle, 'NumberTitle', opt.numberTitle); end
 
+    
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Start by working with units as pixels %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

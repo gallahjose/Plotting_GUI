@@ -17,8 +17,8 @@ function [data, background] = f_SubtractBG(data, time, presignal, varargin)
 
 %% Check input varibales
 if ~exist('presignal','var')
-    if max(time) < 3.2E-9 % detect if long time data
-        presignal = -1.5E-12; % -1.5 ps
+    if max(time) < 10E-9 % detect if long time data
+        presignal = -0.7E-12; % -1.0 ps
     else
         presignal = -1.5E-9; % -1.5 ns
     end
@@ -32,15 +32,17 @@ opt.BGdata = data;
 % user input
 [opt] = f_OptSet(opt, varargin);
 
-if size(opt.BGdata,2) == length(time)
+if size(opt.BGdata,1) ~= length(time)
     opt.BGdata = opt.BGdata';
 end
 
+%% Ignore inf
+opt.BGdata(isinf(opt.BGdata)) = nan;
 %% Calculated background
 %find index of nearest time to PRESIGNAL
 [~,maxIndex] = min(abs(presignal - time));
 %calculates the average background spectrum
-background = nanmean(opt.BGdata(opt.minIndex:maxIndex,:));
+background = nanmean(opt.BGdata(opt.minIndex:maxIndex,:),1);
 BGdata = opt.BGdata(opt.minIndex:maxIndex,:);
 %sets values below threshold to zero
 background(abs(background) < opt.threshold) = 0;
@@ -50,7 +52,7 @@ dataChirp = data;
 dataChirp(abs(dataChirp) > 0 ) = 1;
 
 %% Subtract Background from data
-data = bsxfun(@minus,data,background);
-data = data.*dataChirp;
+data_sub = bsxfun(@minus,data,background);
+data = data_sub.*dataChirp;
 end
 

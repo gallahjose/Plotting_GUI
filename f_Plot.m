@@ -176,7 +176,7 @@ opt.Legend = [];
 opt.LegendLocation = 'best';
 % Pass through options
 opt.FigureOptions = {};
-opt.ColorOptions = [{'hue'},'blue','type','qualitative','reverse',1];
+opt.ColorOptions = [{'hue'},'redblue','type','sequential','reverse',1];
 
 opt.patch = [];
 opt.patch_color = [0.8,0.8,0.8];
@@ -202,7 +202,7 @@ tickH = [];
 [~,zeroIndex] = min(abs(xAxes));
 if zeroIndex + 2 <= length(xAxes)
     if xAxes(zeroIndex+2)-xAxes(zeroIndex+1) > 200E-15 %checks the minimum spacing between time points is greater than 200 fs
-        opt.LinearBound = 2E-9;
+        opt.LinearBound = 5E-9;
     else
         opt.LinearBound = 1E-12;
     end
@@ -462,7 +462,7 @@ if ~ishandle(axesName(end)) || ~strcmpi('axes', get(axesName(end),'type')) %if g
         if opt.DualX
             yTopOffset = 100;
         else
-            yTopOffset = 10;
+            yTopOffset = 25;
         end
         
         [h, fh]  = f_MultiLinLogAxes( 1, axesName(1), 'rowStyles', {'Linear'}, 'title', opt.Title, 'figTitle', opt.FigureTitle,...
@@ -1059,7 +1059,7 @@ if ~isempty(opt.patch)
         
         i = strcmp(ax_child_type,'patch');
         
-        [i_n,order] = sort(i);
+        [i_n,order] = sort(i,'descend');
         axes_temp(m).Children = axes_temp(m).Children(order);
     end
 end

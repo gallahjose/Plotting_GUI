@@ -8,21 +8,19 @@ function [h, s] = f_PlotSurf( data, time, wave, axesName, varargin)
 if ~exist('data','var'), data = random('norm',2,160,[160,251]); end
 if ~exist('time','var'), time =(exp(linspace(0, 10, size(data,1)))-2).*1E-12; end
 if ~exist('wave','var'), wave = linspace(1, size(data,2), size(data,2)); end
-if ~exist('axesName','var'), axesName = 100000000;end
+if ~exist('axesName','var'), axesName = 1;end
 
 % reshapes data, time, wave array.
 if size(wave,1) ~= length(wave), wave = wave'; end
 if size(time,1) ~= length(time), time = time'; end
 if size(time,1) ~= size(data,1), data = data'; end
-
 %% Sets Options
 % default options
 opt.title = [];
 opt.axesTitle = [];
-%opt.yTopOffset = 20;
-opt.ZLabel = '\DeltaT/T'; %Color bar label
+opt.ZLabel = 'm\DeltaT/T'; %Color bar label
 opt.XLabel = 'Time (s)';
-
+opt.figTitle = 'Surface';
 
 opt.ZLim = [min(min(data)), max(max(data))]; %Color bar limits
 opt.YLim = [min(wave) max(wave)];
@@ -30,7 +28,6 @@ opt.YLim = [min(wave) max(wave)];
 opt.hold = 0;
 opt.plotZero = 1;
 opt.overlayAxis = 1;
-opt.figPos = [];
 
 opt.ZeroColor = [0 0 0];
 opt.TickLength = [0.02, 0.02];
@@ -51,24 +48,26 @@ opt.JetBar = 1;
 opt.removeXTick = 0;
 
 opt.fontSize = 20;
-opt.tickScaler = 0.7;
+opt.tickScaler = 0.9;
 
 opt.relabelY = 0;
-
-
 %% Logically Determins Options
 [~,zeroIndex] = min(abs(time));
 if time(zeroIndex+2)-time(zeroIndex+1) > 200E-15 %checks the minimum spacing between time points is greater than 200 fs
     opt.tlin = 1E-9;
+    opt.tscale = 2.5;
+    opt.tlinAxis = 'Time (ns)';
 else
     opt.tlin = 1E-12;
+    opt.tscale = 1;
+    opt.tlinAxis = 'Time (ps)';
 end
 
 %Sets x-axis label
-if abs(wave(1) - wave(end)) < 10 && ~opt.relabelY
-    opt.YLabel = 'Energy (eV)';
-    %opt.relabelY = 1;
-elseif wave(1) == 0
+if abs(wave(1) - wave(end)) < 10
+    opt.YLabel = 'Wavelength (nm)';
+    opt.relabelY = 1;
+elseif wave(1) < 10
     opt.YLabel = 'Pixel';
 else
     opt.YLabel = 'Wavelength (nm)';
@@ -85,54 +84,29 @@ elseif time(1) > 0
     opt.twoPlots = 0;
     opt.onePlotScale = 'log';
 end
-
-
-
-
-opt.tlinLabel = [];
-opt.linLogFraction = [];
-
 %% user input
 [opt] = f_OptSet(opt, varargin);
 
-%% Defaults after if not set by user
-% linLog linear axis label
-if ~any(strcmp(varargin,{'tlinLabel'}))
-    prefix = num2strEng(opt.tlin);
-    opt.tlinLabel = ['Time (',prefix(end),'s)'];
-end
 
-% fraction linear part of linlog axis
-if ~any(strcmp(varargin,{'linLogFraction'}))
-    if opt.tlin == 1E-12 && time(end) > 1E-6;
-        opt.linLogFraction = 0.15;
-    else
-        opt.linLogFraction = 0.2;
-    end
+if opt.tlin == 1E-12 && time(end) > 1E-6;
+    linLogFraction = 0.15;
+else
+    linLogFraction = 0.2;
 end
-
 %% Checks Variables
-%if iscell(opt.title), opt.title = opt.title{1}; end
+if iscell(opt.title), opt.title = opt.title{1}; end
+
+if isempty(opt.ZLim), opt.ZLim = [min(min(data)), max(max(data))]; end
 
 if opt.YLim(1) == opt.YLim(2), opt.YLim = [opt.YLim(1)*0.8, opt.YLim(1)*1.2]; end
 if opt.ZLim(1) == opt.ZLim(2), opt.ZLim = [opt.ZLim(1)*0.8, opt.ZLim(1)*1.2]; end
-if sum(opt.YLim) == 0 , opt.YLim= [-1,1]; end
-if sum(opt.ZLim) == 0 , opt.ZLim = [-1,1]; end
+%if sum(opt.YLim) == 0 , opt.YLim= [-1,1]; end
+%if sum(opt.ZLim) == 0 , opt.ZLim = [-1,1]; end
 
 opt.YLim = sort(opt.YLim);
 opt.ZLim = sort(opt.ZLim);
 
-if isempty(opt.XLabel), opt.tlinLabel = []; end
-
-%% Rescale data and append label
-
-SI_Scalar = round(log10(max(abs(opt.ZLim))));
-if abs(SI_Scalar) > 1
-    data = data/10^(SI_Scalar);
-    opt.ZLim = opt.ZLim/10^(SI_Scalar);
-    opt.ZLabel = [opt.ZLabel, '(\times10^{',num2str(SI_Scalar),'})'];
-end
-
+if isempty(opt.XLabel), opt.tlinAxis = []; end
 %% downsamples data points used in surface (reduce data set for latex
 if opt.downSample
     %timeI =  interp1q( linspace(1,length(time),length(time))' , time , linspace(1,length(time),length(time)*interpFactor+1)');
@@ -146,18 +120,12 @@ if opt.downSample
     %time = timeI;
     wave = waveI;
 end
-
 %% Sets up axes for plotting
-
-if ~isempty(opt.title)
-    opt.title = strrep(opt.title, '_', ' ');
-end
-
 if ~ishandle(axesName(end)) || ~strcmp('axes', get(axesName(end),'type')) %if given figure or invalid handle
     if opt.twoPlots
-        h  = f_MultiLinLogAxes( 1, axesName(1), 'rowStyles', {'LinLog'}, 'title', opt.title, 'figTitle',  opt.title, 'fontSize',opt.fontSize*opt.tickScaler, 'linLogFraction',opt.linLogFraction, 'figPos', opt.figPos);
+        h  = f_MultiLinLogAxes( 1, axesName(1), 'rowStyles', {'LinLog'}, 'title', opt.title, 'figTitle', ['Surface: ', opt.title], 'fontSize',opt.fontSize*opt.tickScaler, 'linLogFraction',linLogFraction);
     else
-        h  = f_MultiLinLogAxes( 1, axesName(1), 'rowStyles', {'Linear'}, 'title', opt.title, 'figTitle', opt.title, 'fontSize',opt.fontSize*opt.tickScaler, 'figPos', opt.figPos);
+        h  = f_MultiLinLogAxes( 1, axesName(1), 'rowStyles', {'Linear'}, 'title', opt.title, 'figTitle', ['Surface: ', opt.title], 'fontSize',opt.fontSize*opt.tickScaler);
     end
 else % loads the axes handles into variables
     if opt.twoPlots && length(axesName) < 2
@@ -165,16 +133,15 @@ else % loads the axes handles into variables
     end
     h = axesName;
 end
-
 %% Sets Generic Axes properties
 if ~opt.hold
     %options for each axis
     for n = 1 : length(h)
-        %cla(h(n),'reset')
+        cla(h(n),'reset')
         hold(h(n),'on')
         box(h(n), 'on');
         view(h(n), [opt.v1, opt.v2]);
-        set(h(n), 'CLim', opt.ZLim, 'ZLim', opt.ZLim, 'YLim', opt.YLim,...
+        set(h(n), 'CLim', opt.ZLim, 'YLim', opt.YLim,...
             'TickLength',opt.TickLength, 'LineWidth', opt.TickWidth);
         zlabel(h(n), opt.ZLabel,'fontsize',opt.fontSize)
     end
@@ -184,9 +151,8 @@ if ~opt.hold
     if ~isempty(opt.axesTitle), title(h(end),opt.axesTitle); end
     if opt.colorbar
         axesPos = get(h(end),'position');
-        ch = colorbar('eastoutside');
-        %ch = colorbar('peer', h(end)); % adds color bar to end axes - DOES
-        %NOT WORK IN 2014?
+        %ch = colorbar(h(end), 'EastOutside'); % adds color bar to end axes
+        ch = colorbar(h(end)); % adds color bar to end axes
         ylabel(ch, opt.ZLabel,'fontsize',opt.fontSize);
         set(ch, 'LineWidth', opt.TickWidth,'fontsize',opt.fontSize*opt.tickScaler);
         colorPos = get(ch, 'position');
@@ -204,23 +170,16 @@ if ~opt.hold
     %options if there are two plots
     if opt.twoPlots %%
         set(h(2),'YTickLabel','',...
-            'XLim', [opt.tlin, max(time)], ...
+            'XLim', [opt.tlin*opt.tscale, max(time)], ...
             'xscale', 'log',...
             'XTickMode','manual',...
             'XTick',10.^(-12:-1));
-        set(h(1), 'XLim', [-1*opt.tlin, opt.tlin], 'xscale', 'linear','XTick',-1*opt.tlin:opt.tlin/2:opt.tlin);
-        XTicks = get(h(1), 'XTick');
-        logbase=3*floor(log10(opt.tlin)/3);
-        XTicks = XTicks/(10^logbase);
-        XTickLabel = [arrayfun(@(X) num2str(X,3),XTicks(1:end-2),'UniformOutput',0),{''},{''}];
-        XTickLabel{2} = '';
-        set(h(1), 'XTickLabel', XTickLabel);
-        pause(0.00000000001)
-        xlabh2 = xlabel(h(1), opt.tlinLabel,'fontsize',opt.fontSize);
-        xlabPos = get(xlabh,'Position');
-        xlabPos2 = get(xlabh2,'Position');
-        xlabPos2(2) = xlabPos(2);
-        set(xlabh2,'Position', xlabPos2);
+        set(h(1),'XTick',-1*opt.tscale:opt.tscale/2:3, ...
+            'XTickLabel',{num2str(-1*opt.tscale),'', '0', '', ''}, ...
+            'XLim', [-1*opt.tscale, opt.tscale],...
+            'xscale', 'linear');
+        xlabh2 = xlabel(h(1), opt.tlinAxis,'fontsize',opt.fontSize);
+        set(xlabh2,'Position', get(xlabh,'Position'));
     else
         set(h(end), 'XLim', [min(time), max(time)], ...
             'xscale', opt.onePlotScale);
@@ -230,11 +189,10 @@ else
         hold(h(n),'on')
     end
 end
-
 %% Plots either two or one plots
 if opt.twoPlots
-    [~,lin_index_Minpos] = min(abs(-opt.tlin-time));  %find indices of time range
-    [~,lin_index_Maxpos] = min(abs(opt.tlin-time));
+    [~,lin_index_Minpos] = min(abs(-opt.tlin*opt.tscale-time));  %find indices of time range
+    [~,lin_index_Maxpos] = min(abs(opt.tlin*opt.tscale-time));
     
     if lin_index_Minpos ~= 1
         lin_index_min = lin_index_Minpos - 1;
@@ -248,7 +206,7 @@ if opt.twoPlots
     end
     
     %% linear plot
-    s(1) = surf(h(1), time((lin_index_min:lin_index_max+1),:),wave,data((lin_index_min:lin_index_max+1),:)');
+    s(1) = surf(h(1), time((lin_index_min:lin_index_max+1),:)/(opt.tlin),wave,data((lin_index_min:lin_index_max+1),:)');
     %contour3(h(1), time((lin_index_min:lin_index_max+1),:)/(opt.tlin),wave,data((lin_index_min:lin_index_max+1),:)','k')
     %% log plot
     timeLog = time((lin_index_Maxpos:end),:);
@@ -257,10 +215,7 @@ if opt.twoPlots
 else %% one plot
     s(1) = surf(h(end), time, wave, data');
 end
-
 %% turns off axees hold, and plotZero line if needed
-%NumTicks = 8;
-
 for n = 1 : length(h)
     shading(h(n),char(opt.shadingType));
     set(h(n), 'Layer','top')
@@ -278,12 +233,10 @@ for n = 1 : length(h)
         uistack(zh,'top')
         set(get(get(zh, 'Annotation'), 'LegendInformation'), ...
             'IconDisplayStyle', 'off')
-        %set(h(n), 'YTick', linspace(yLimits(1),yLimits(2),NumTicks))
     end
     hold(h(n),'off')
 end
 
-%set(h(1), 'YTickLabel', round(10*linspace(yLimits(1),yLimits(2),NumTicks))/10);
 if opt.JetBar
     f_JetBar('allAxes', h);
 else
@@ -291,10 +244,9 @@ else
         colormap(h(n),'Jet')
     end
 end
-
-
 %% options for yLabes (i.e if in eV but want wavelength)
-    if opt.relabelY
+opt.relabelY = 0;    
+if opt.relabelY
         numTick = length(get(h(1), 'YTick')); 
         if numTick < 6, numTick = 6; end
         waveStart = [1240/wave(1),1024/wave(end)];
@@ -346,6 +298,3 @@ if opt.overlayAxis
         set(tickH(end), 'XScale', opt.onePlotScale);
     end
 end
-
-
-

@@ -1,4 +1,4 @@
-function [ y ] = f_Gaussian( x, FWHM, mu, scaler )
+function [ y, y_2 ] = f_Gaussian( x, FWHM, mu, scaler )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 if nargin <= 2 , mu = 0; end
@@ -16,10 +16,13 @@ if length(mu) < length(FWHM)
 end
 
 c = FWHM./2.35482;
+tau = FWHM./1.76;
 
 y = zeros(length(x), length(FWHM));
+y_2 = zeros(length(x), length(FWHM));
 
 for n = 1 : length(FWHM)
-y(:,n) = scaler(n).*exp(-(x-mu(n)).^2/(2*c(n).^2));
+    y(:,n) = scaler(n).*exp(-(x-mu(n)).^2/(2*c(n).^2));
+    y_2(:,n) = scaler(n).*(sech((x-mu(n))/tau(n))).^2;
 end
 

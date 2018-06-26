@@ -1,9 +1,13 @@
-function [Results] = f_LoadLabviewTA(file_pointer, previous_output)
+function [Results] = f_LoadLabviewTA(file_pointer, previous_output,varargin)
 %[Results] = f_LoadLabviewTA(file_pointer, previous_output)
 %   Detailed explanation goes here
-
+new_data = 0;
 opt.save = 1;
+opt.flip_data = [0,0];
 
+
+
+[opt] = f_OptSet(opt, varargin);
 %% Looks for directory
 if ~exist('file_pointer','var') || isempty(file_pointer)
     file_pointer = '\\resstococifs001.res.vuw.ac.nz\SCPS_UltraFast_01\';
@@ -63,7 +67,7 @@ if refresh_data
     Results.Directory = directory;
     Results.Camera = [];
     
-    camera_types = regexp(files,'^[^_]*_(?=.*RawCamData)','match');
+    camera_types = regexp(files,'^[^_]*_(?=.*Write Raw Data)','match');
     camera_types(cellfun(@isempty,camera_types)) = [];
     camera_types = cellfun(@(x) x{1}(1:end-1),camera_types,'UniformOutput',0);
     camera_types = unique(camera_types);
@@ -113,7 +117,7 @@ for n = 1 : length(Results.Camera)
     
     timing_index = find(~cellfun(@isempty,regexp(files,[Results.Camera(n).Type,'.*TimingData'])));
     timing_index(~cellfun(@isempty,regexp(files(timing_index),'Static'))) = [];
-    Results.Camera(n).Timing_File = files{timing_index};
+    Results.Camera(n).Timing_File = files(timing_index);
 end
 
 %% Loads data
@@ -146,6 +150,11 @@ for n = 1 : length(Results.Camera)
                 [numShots, numPixels, 1], 'double', Results.Camera(n).Old_Size(j,1),...
                 'bsq','ieee-le',...
                 {'Column', 'Range', [1 numPixels]});
+            
+            if opt.flip_data(n)
+                new_data(:,2:end) = new_data(:,2:end)*-1;
+            end
+            
             Results.Camera(n).Data(j).Writer = [new_data; Results.Camera(n).Data(j).Writer];
             Results.Camera(n).Old_Size(j) = Results.Camera(n).New_Size(j);
             
@@ -181,7 +190,8 @@ for n = 1 : length(Results.Camera)
 
         time = working_data(:,1)*1E-15;
         working_data = working_data(:,2:end);
-        if max(time) < 10E-9
+        
+        if max(abs(time)) < 10E-9 % using delay generator (if untrue)
             if min(time) > -15E12
                 time = time*2;
             end
@@ -194,10 +204,14 @@ for n = 1 : length(Results.Camera)
         
         [time,~,IC] = unique(time);
         [bins,index] = hist(IC,length(time));
-        DeltaTT = nan(length(time),numPixels-1,max(bins));
+        DeltaTT = nan(length(time),numPixels-1,max(bins(1:end-1)));
         for j = 1 : size(DeltaTT,1)
             I = sum(IC==j);
-            DeltaTT(j,:,1:I) = [working_data(IC==j,:)]';
+            DeltaTT_temp = [working_data(IC==j,:)]';
+            if I > size(DeltaTT,3)
+                I = size(DeltaTT,3); 
+            end
+            DeltaTT(j,:,1:I) = DeltaTT_temp(:,1:I);
         end
         
         %assignin('base',['power_data_',num2str(n)],DeltaTT);
@@ -205,18 +219,32 @@ for n = 1 : length(Results.Camera)
         
         Results.Camera(n).DeltaTT_All = DeltaTT;
         
-        DeltaTT = nanmean(DeltaTT,3);
+        % add in a filter..
+        data_filter = Results.Camera(n).DeltaTT_All;
+        
+        z_score = zscore(data_filter,0,3);
+        
+        data_filter(abs(z_score) > 3) = nan;
+        
+        
+        DeltaTT = nanmean(data_filter,3);
         
         Results.Camera(n).DeltaTT = DeltaTT;
         Results.Camera(n).Time = time;
         
-        
-        timing_path = [Results.Directory,Results.Camera(n).Timing_File];
-        [ timing_data ] = f_readCSV( timing_path, ',' );
-        time_loaded = [cellfun(@(x) str2num(x(1:end-3)),timing_data(2:end,1))*1E-15,...
-            cellfun(@(x) datenum(x,'HH:MM:SS.FFF ddmmyyyy')*24*60*60,timing_data(2:end,2)),...
-            cellfun(@str2num,timing_data(2:end,3)),...
-            ];
+        %% Loads timing data
+        Results.Camera(n).Timing_Data = [];
+        time_loaded = [];
+        for j = 1 : length(Results.Camera(n).Timing_File)
+            timing_path = [Results.Directory,Results.Camera(n).Timing_File{j}];
+            [ timing_data ] = f_readCSV( timing_path, ',' );
+            time_loaded_temp = [
+                cellfun(@(x) str2num(x(1:end-3)),timing_data(2:end,1))*1E-15,...
+                cellfun(@(x) datenum(x,'HH:MM:SS.FFF ddmmyyyy')*24*60*60,timing_data(2:end,2)),...
+                cellfun(@str2num,timing_data(2:end,3)),...
+                ];
+            time_loaded = [time_loaded; time_loaded_temp];
+        end
         Results.Camera(n).Timing_Last = time_loaded(end,2) + time_loaded(end,3);
         time_loaded(2:end,2) = time_loaded(2:end,2) - time_loaded(1:end-1,2);
         time_loaded(1,2) = 0;
@@ -236,10 +264,13 @@ if new_data && opt.save
         
         %save_name = [save_name,'_',num2str(number_runs,'%02d'),' [',datestr(now,'HHMM.SS dd-mm-YY'),'].csv'];
         save_name = [save_name,'_',num2str(number_runs,'%02d'),'.csv'];
-        
-        wave = [1:size(current_camear.DeltaTT,2)]';
-        output_file = [NaN,wave';current_camear.Time,current_camear.DeltaTT];
-        csvwrite([directory,save_name],output_file);
+        try
+            wave = [1:size(current_camear.DeltaTT,2)]';
+            output_file = [NaN,wave';current_camear.Time,current_camear.DeltaTT];
+            csvwrite([directory,save_name],output_file);
+        catch ME
+            
+        end
     end
 end
 end

@@ -75,6 +75,10 @@ for n = 1 : length(run_details)
     end
 end
 
+if ~exist('RunDetails','var')
+    RunDetails = [];
+end
+
 %% Load wavelength in eV
 if opt.check_eV && min(wave) > 100
         %wave = 1240./wave;

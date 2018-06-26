@@ -2,33 +2,38 @@ function [ zLim ] = f_zLim( data, varargin)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-opt.nth = 10;
+opt.nth = 0.95; % box 
+
 
 % user input
 [opt] = f_OptSet(opt, varargin);
 
-data = sort(data(:),1);
 
-if opt.nth < 1
-    
-    pct = opt.nth;
-    if pct > 0.5
-       pct = 1 - pct; 
-    end
-    
-    zLim = [prctile(data,pct*100),prctile(data,(1-pct)*100)];
-    
-    if zLim(2) < 0, zLim(2) = zLim(2)*1.2; else zLim(2) = zLim(2)/1.2; end
-    if zLim(1) < 0, zLim(1) = zLim(1)*1.2; else zLim(1) = zLim(1)/1.2; end
+if opt.nth > 1, opt.nth = opt.nth/100; end
+if opt.nth < 0.3, opt.nth = 1 - opt.nth; end
 
-elseif size(data,1) > opt.nth
-    
-    
-    zLim = [min(data(opt.nth,:)), max(data(end-opt.nth+1,:))*1.2];
-    
-    if zLim(1) < 0, zLim(1) = zLim(1)*1.2; else zLim(1) = zLim(1)/1.2; end
-    
+data = data(:);
+data = sort(data,1);
+data(isnan(data)) = [];
+data(isinf(data)) = [];
+
+opt.nth = (1 - opt.nth)/2;
+index_limits = ceil([opt.nth*length(data),(1-opt.nth)*length(data)]);
+index_limits = index_limits(1):index_limits(2);
+if length(data) > length(index_limits)
+    zLim = [min(data(index_limits)), max(data(index_limits))];
 else
     zLim = [min(data),max(data)];
 end
 
+if zLim(1) > 0 
+    zLim(1) = zLim(1)/1.2;
+else
+    zLim(1) = zLim(1)*1.2;
+end
+
+if zLim(2) < 0 
+    zLim(2) = zLim(2)/1.2;
+else
+    zLim(2) = zLim(2)*1.2;
+end

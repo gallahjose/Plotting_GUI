@@ -17,7 +17,7 @@ for n = 1 : length(A)
 end
 SizeArray = cellfun(@length,A);
 finalData = cell(size(A,1),max(SizeArray));
-for n = 1 : length(A);
+for n = 1 : length(A)
     finalData(n,1:length(A{n,1})) = A{n,1}';
 end
 
