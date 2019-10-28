@@ -40,6 +40,7 @@ if ~isempty(notchFiles)
     output(length(notchFiles),1).refrenceWave = [];
     output(length(notchFiles),1).residual = [];
     output(length(notchFiles),1).Date = [];
+    
     for n = 1 : length(notchFiles)
         data = importdata([directory,notchFiles{n}]);
         
@@ -76,6 +77,7 @@ if ~isempty(notchFiles)
             dataPredAll(iStart:iEnd,n+1) = dataPred - scaler(2);
         end
     end
+    
     %% Removes outliers
     if opt.removeOutliers
         
@@ -113,6 +115,7 @@ if ~isempty(notchFiles)
     h = f_Plot(bsxfun(@rdivide,dataAll(:,2:end),scaler),dataAll(:,1),opt.plotR,'Ylim',[-0.05,1.2],...
         'FontScaler',1,'Ylabel','Normalized Intensity','Legend',Legend,'axestitle','Notch Positions');
     f_Plot(bsxfun(@rdivide,dataPredAll(:,2:end),scaler),dataAll(:,1),h,'Hold',1,'LineStyle','-','PointStyle','','RemoveLegend',1);
+    
 else
     
     output.tragetPixel = [];

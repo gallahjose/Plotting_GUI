@@ -81,7 +81,7 @@ end
 
 %% Load wavelength in eV
 if opt.check_eV && min(wave) > 100
-        %wave = 1240./wave;
+        wave = 1240./wave;
 end
 
 end

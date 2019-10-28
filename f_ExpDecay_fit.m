@@ -2,8 +2,8 @@ function [ fit, func, P ] = f_ExpDecay_fit( x, y , plot_window)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-if nargin == 2 ,
-    plot_window = 0;
+if nargin == 2 
+    plot_window = 1;
 end
 
 % Define exponential function

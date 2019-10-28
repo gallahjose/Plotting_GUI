@@ -36,7 +36,14 @@ if opt.showPlots
     if ishandle(opt.fig+1)
     close(opt.fig+1)
     end
-    [ h ] = f_MultiLinLogAxes( opt.NumPlotted, opt.fig+1);
+    
+    rowStyles = {
+        'Linear'
+        'LinLog'
+        'LinLog'
+        'LinLog'
+        };
+    [ h ] = f_MultiLinLogAxes( opt.NumPlotted, opt.fig+1,'rowStyles',rowStyles);
     
     
     UScalled = U(:,1:opt.NumPlotted); %kinetics
@@ -69,6 +76,7 @@ if opt.showPlots
     %Plots surface and residuals from combininh multiple components
     [ h ] = f_MultiLinLogAxes( opt.NumPlotted, opt.fig+2, 'rowStyles', [{'LinLog'}], 'yPadding', 0.3);
     [ j ] = f_MultiLinLogAxes( opt.NumPlotted, opt.fig+3, 'rowStyles', [{'LinLog'}], 'yPadding', 0.3);
+    
     for n = 1 : opt.NumPlotted
         hIndex = n*2-1;
         dataPred = U(:,1:n)*S(1:n,1:n)*V(:,1:n)';

@@ -96,10 +96,19 @@ if opt.plotR
     if yMin > 0, yMin = 0; end
     
     h = f_Plot(dataPred, x, opt.plotR,'title', ['Gaussian Fit of ',opt.name], 'PlotStyles', [0.8,0,0],...
-        'twoPlots', 0,'LineStyle','-', 'YLim', [yMin, yMax],'PointStyle','');
+        'twoPlots', 0,'LineStyle','-', 'YLim', [yMin, yMax],'PointStyle','','YLabel','Int');
     
     h = f_Plot(y, x, h,'hold',1, 'Legend', [{'Fit'}, 'data'], 'PlotStyles', [0,0,0.8], 'twoPlots', 0,'LineStyle','');
     pause(0.5)
+    
+    txt_str = {
+        ['mu =',num2str(mu)]
+        ['FWHM =',num2str(FWHM)]
+        ['Scalar =',num2str(scaler(1))]
+        };
+    dim = [.2 .5 .3 .3];
+    ah= annotation('textbox',dim,'String',txt_str,'FitBoxToText','on');   
+    
 end
 end
 
@@ -133,8 +142,8 @@ end
 dataPred = xShapes*scaler;
 
 if plotD
-    f_PlotTraces([data,dataPred],x,plotD);
-    pause(0.1)
+    f_Plot([data,dataPred],x,plotD,'twoPlots',0,'onePlotScale','linear');
+    pause(0.5)
 end
 
 end

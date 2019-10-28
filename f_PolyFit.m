@@ -30,11 +30,14 @@ end
 Y = Y(index);
 designMatrix = designMatrix(index,:);
 X_Orig = X;
+Y_Orig = Y;
 
 %% Zero NaN values
 keep = ~isnan(Y).*~any(isnan(designMatrix),2);
-Y(~keep) = 0;
-designMatrix(~keep) = 0;
+
+Y(~keep) = [];
+X(~keep) = [];
+designMatrix(~keep,:) = [];
 
 %% Build Hat matrix
 hatMatrix = designMatrix/(designMatrix'*designMatrix)*designMatrix'; %H = hat matrix, X = design matrix
@@ -88,10 +91,16 @@ fittedCurve = OrigDM*fittedParameters;
 outlier = [outlier_X, outlier_Y];
 usedData = [X,Y];
 
+if isnumeric(opt.plotR) && ~isempty( opt.plotR)
+    opt.plotR = f_MultiLinLogAxes(1,opt.plotR,'RowStyles',{'Linear'});
+end
+
 if ishandle(opt.plotR)
-    h = f_Plot(fittedCurve,X_Orig,opt.plotR,'LineStyle','-','PlotStyles',[0.4,0.4,0.4],'PointStyle','');
+    h = f_Plot(fittedCurve,X_Orig,opt.plotR,'LineStyle','-','PlotStyles',[0.4,0.4,0.4],'PointStyle','','TwoPlots',0,'XLabel','X','YLabel','Y','flipX',0);
     h = f_Plot(Y,X,h,'hold',1,'PlotStyles',[0.2,0.8,0.2]);
-    h = f_Plot(outlier_Y,outlier_X,h,'hold',1,'PlotStyles',[0.8,0.2,0.2],'Legend',{'Fitted','Used','Outlier'});
+    if ~isempty(outlier_Y)
+        h = f_Plot(outlier_Y,outlier_X,h,'hold',1,'PlotStyles',[0.8,0.2,0.2],'Legend',{'Fitted','Used','Outlier'});
+    end
 end
 
 end

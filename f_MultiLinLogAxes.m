@@ -102,11 +102,13 @@ end
 numRows = size(opt.rowStyles,1);
 % adds in escape characters for title
 if ~isempty(opt.figTitle)
-    %opt.figTitle = regexprep(opt.title,'\_(?!{)','\\_'); % repace '_' not followed by '{' with '\-'
+    %opt.fig = regexprep(opt.title,'\_(?!{)','\\_'); % repace '_' not followed by '{' with '\-'
     opt.figTitle = regexprep(opt.figTitle,'\\..{','');
     opt.figTitle = regexprep(opt.figTitle,'(?<!\\)}','');
 end
-
+if isempty(opt.figTitle)
+    opt.figTitle = opt.title; 
+end
 %% Lower case axes number text
 if opt.lowerNumAxes
     opt.axesNumTxt = lower(opt.axesNumTxt);
@@ -362,7 +364,7 @@ for j = 1 : numRows
                 
                 if opt.external_labels
                     % outside top
-                    if ~isempty(opt.axesNumTxtAppend)
+                    if ~isempty(opt.axesNumTxtAppend) && (j-1)*numColumns + n <= length(opt.axesNumTxtAppend)
                         add_str = opt.axesNumTxtAppend{(j-1)*numColumns + n};
                         if ~isempty(add_str)
                             tbh_2(tbh_index) = annotation(fh,'textbox',[x, y_temp + height_temp, 0.2, 0.01,],...
@@ -394,9 +396,9 @@ for j = 1 : numRows
                     tbh(tbh_index).Position(4) = h_tbh_height;
                     tbh(tbh_index).FontSize = tbh(tbh_index).FontSize.*font_scalar;
                     tbh(tbh_index).Position(2) = h_tbh_pos;
-                    tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) - tbh_width/0.75;
+                    tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) - tbh_width/0.5;
                 else
-                    tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(4) - tbh(tbh_index).Position(4) - 0.01*h(axisPlotted+1).Position(4);
+                    tbh(tbh_index).Position(2) = h(axisPlotted+1).Position(2) + h(axisPlotted+1).Position(4);% - tbh(tbh_index).Position(4) - 0.01*h(axisPlotted+1).Position(4);
                     tbh(tbh_index).Position(1) = h(axisPlotted+1).Position(1) + 10/opt.figPos(3);
                 end
                 tbh_index = tbh_index + 1;

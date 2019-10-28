@@ -1,4 +1,4 @@
-function [data, background] = f_SubtractBG(data, time, presignal, varargin)
+function [data, background, sd] = f_SubtractBG(data, time, presignal, varargin)
 %[ data ] = f_SubtractBG(data, time, presignal, options)
 %   Subtracts signal before time given by PRESIGNAL for the DATA set.
 %
@@ -38,6 +38,7 @@ end
 
 %% Ignore inf
 opt.BGdata(isinf(opt.BGdata)) = nan;
+
 %% Calculated background
 %find index of nearest time to PRESIGNAL
 [~,maxIndex] = min(abs(presignal - time));
@@ -46,6 +47,9 @@ background = nanmean(opt.BGdata(opt.minIndex:maxIndex,:),1);
 BGdata = opt.BGdata(opt.minIndex:maxIndex,:);
 %sets values below threshold to zero
 background(abs(background) < opt.threshold) = 0;
+
+%% Calculated standard deviation from the background signal
+sd = nanstd(opt.BGdata(opt.minIndex:maxIndex,:),1);
 
 %% Keeps zero values as zero (zero likely due to chirp)
 dataChirp = data;

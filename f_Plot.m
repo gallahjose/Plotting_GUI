@@ -68,8 +68,8 @@ if any(length(axesName) == size(data)') && ~isempty(varargin) && ~ischar(varargi
     
     plotSurf = 1;
     useTime = 1;
-    xRightOffset = 90;
-    xPadding = 90;
+    xRightOffset = 110;
+    xPadding = 110;
     
     
     varargin = [varargin,{'TickWidth'},0.5];
@@ -174,6 +174,11 @@ opt.PlotStyles = [];
 opt.DisplayName = 'xAxes';
 opt.Legend = [];
 opt.LegendLocation = 'best';
+
+opt.zeroYLim = false;
+
+opt.presentation = 1;
+
 % Pass through options
 opt.FigureOptions = {};
 opt.ColorOptions = [{'hue'},'redblue','type','sequential','reverse',1];
@@ -182,7 +187,7 @@ opt.patch = [];
 opt.patch_color = [0.8,0.8,0.8];
 
 opt.UiStack = 0;
-
+opt.marker_alpha = [];
 %
 opt.log_scale = 0;
 
@@ -202,7 +207,7 @@ tickH = [];
 [~,zeroIndex] = min(abs(xAxes));
 if zeroIndex + 2 <= length(xAxes)
     if xAxes(zeroIndex+2)-xAxes(zeroIndex+1) > 200E-15 %checks the minimum spacing between time points is greater than 200 fs
-        opt.LinearBound = 5E-9;
+        opt.LinearBound = 1E-9;
     else
         opt.LinearBound = 1E-12;
     end
@@ -240,6 +245,21 @@ if ~useTime %time is not in this figure
     opt.OnePlotScale = 'linear';
 end
 
+
+%%
+if opt.presentation
+    
+    opt.grid = 'off';
+    opt.TickLength = [0.03, 0.03];
+    opt.TickWidth = 2;
+    %opt.FontSize= 30;
+    
+    
+    
+end
+
+
+
 %% %%%%%%% USER OPTIONS SET %%%%%%%%%%%
 % special f_opt check
 i = find(strcmpi(varargin,'XLabel'));
@@ -274,8 +294,8 @@ end
 if ~any(strcmpi(varargin,'TickWidth')) && ishandle(axesName(end)) && strcmpi('axes', get(axesName(end),'type'))
     opt.TickWidth = get(axesName(1),'LineWidth');
 end
-    
-    
+
+
 if plotSurf
     % Surface Only Options
 else
@@ -307,14 +327,20 @@ end
 % plot styles
 if ~any(strcmpi(varargin,'PlotStyles')) && ~plotSurf
     if exist('f_ColorPicker','file')
-        opt.PlotStyles = f_ColorPicker( size(data,2), opt.ColorOptions{:});
+        if size(data,2) > 1
+            opt.PlotStyles = f_ColorPicker( size(data,2), opt.ColorOptions{:});
+        else
+            opt.PlotStyles = [0.3,0.3,0.3];
+        end
     elseif exist('f_Colorbrewer','file')
         opt.PlotStyles = f_Colorbrewer( size(data,2), opt.ColorOptions{:});
     end
 end
 
 if ~any(strcmpi(varargin,{'ZLabel'}))
-    if [opt.ZLim(1) <-0.8 && opt.ZLim(1) > -3] || [opt.ZLim(2) <3 && opt.ZLim(2)  > 0.8]
+    if opt.ZLim(2) > 4
+        opt.ZLabel = 'PL (arb)'; %Intensity label
+    elseif [opt.ZLim(1) <-0.8 && opt.ZLim(1) > -3] || [opt.ZLim(2) <3 && opt.ZLim(2)  > 0.8]
         opt.ZLabel = 'Normalized \DeltaT/T'; %Intensity label
     else
         opt.ZLabel = '\DeltaT/T'; %Intensity label
@@ -330,11 +356,25 @@ if opt.log_scale && plotSurf
     %data = abs(data);
     
     % takes care of the limits!
-    opt.ZLim = log10(opt.ZLim);
-    opt.ZLim(1) = min(data(:));
+    if min(opt.ZLim) < 0
+        re_set_low = true;
+    else
+        re_set_low = false;
+    end
     
-    opt.JetType = 'logTRPL';
+    opt.ZLim = log10(opt.ZLim);
+    if  re_set_low
+        opt.ZLim(1) = min(data(:));
+    end
+    if ~any(strcmpi(varargin,'JetType'))
+        %opt.ZLim(1) = -1;
+        %opt.JetType = 'logTRPL';
+        opt.JetType = 'logTRPLblue';
+        %opt.JetType = 'TRPLredblue';
+        %opt.JetType = 'jet';
+    end
 end
+
 
 %% Checks Options
 % X, Y, Z limits
@@ -496,6 +536,11 @@ if opt.RemoveXTick
     opt.XLabel = '';
 end
 
+%% Zero Ylimit
+if opt.zeroYLim
+    opt.YLim(1) = 0;
+end
+
 %% Sets Generic Axes properties
 if ~opt.Hold
     %options for each axis
@@ -609,19 +654,21 @@ if ~opt.Hold
         xLab_pos = 10^(xLab_pos);
         xlabh.Position(1) = xLab_pos;
         
-        h(1).XTickLabel{1} = '';
-        linear_label = opt.LinearBound*x_tick_scalar;
-        if linear_label >= 1
-            linear_label = num2str(linear_label,0);
-        else
+        if x_tick_scalar < 2
+            h(1).XTickLabel{1} = '';
+            linear_label = opt.LinearBound;
             linear_label = num2str(linear_label,'%1.0E');
             linear_label = [strrep(linear_label,'E-','\times10^{-'),'}'];
             linear_label = strrep(linear_label,'1\times','');
             linear_label = strrep(linear_label,'-0','-');
-        end
-        h(1).XTickLabel{end} = linear_label;
-        if length(h(1).XTickLabel) == 4
-           h(1).XTickLabel{3} = '0.5';
+            
+            h(1).XTickLabel = {['-',linear_label],'0',linear_label};
+            if length(h(1).XTickLabel) == 4
+                h(1).XTickLabel{3} = '0.5';
+            end
+        else
+            h(1).XTickLabel = [-1,0,1];
+            
         end
         
         
@@ -710,7 +757,7 @@ if opt.TwoPlots %linlog Plot
                 MarkerFaceColor = opt.PlotStyles(n,:);
                 MarkerEdgeColor = 'none';
             end
-
+            
             set(s_1(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
                 'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
                 opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
@@ -718,7 +765,7 @@ if opt.TwoPlots %linlog Plot
             set(s_2(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
                 'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
                 opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
-        
+            
         end
         if opt.RemoveLegend
             for j = 1 : size(s_1,1)
@@ -734,24 +781,50 @@ else %one plot
     if plotSurf
         s = surf(h(end), xAxes, yAxes, data');
     else
-        s = plot(h(end), xAxes, data,...
-            'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize);
-        for n = 1 : length(s)
-            if opt.clear_marker
-                MarkerFaceColor = 'none';
-                MarkerEdgeColor = opt.PlotStyles(n,:);
-            else
-                MarkerFaceColor = opt.PlotStyles(n,:);
-                MarkerEdgeColor = 'none';
-            end
-            
-            set(s(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor,...
-                'MarkerEdgeColor',MarkerEdgeColor,'LineStyle',opt.LineStyle{n},'Marker',...
-                opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
-            uistack(s(n),'top');
+        ps_c = cell(size(opt.PlotStyles,1),1);
+        ps_none = cell(size(opt.PlotStyles,1),1);
+        for k = 1:size(opt.PlotStyles,1)
+            ps_c{k} = opt.PlotStyles(k,:);
+            ps_none{k} = 'none';
+        end
+
+         
+        if opt.clear_marker
+            MarkerFaceColor = ps_none;
+            MarkerEdgeColor = ps_c;
+        else
+            MarkerFaceColor = ps_c;
+            MarkerEdgeColor = ps_none;
         end
         
+        if ~isempty(opt.marker_alpha)
+            s = scatter(h(end), xAxes, data);
+            
+            for n = 1 : length(s)
+                set(s(n),'MarkerFaceColor',MarkerFaceColor{n},'SizeData',opt.MarkerSize,...
+                    'MarkerEdgeColor',MarkerEdgeColor{n},'Marker',...
+                    opt.PointStyle{n},'DisplayName',opt.DisplayName{n},'MarkerFaceAlpha',opt.marker_alpha);
+                uistack(s(n),'top');
+                
+            end
+            opt.PlotZero = 0;
+        else
+            s = plot(h(end), xAxes, data,...
+                'linewidth', opt.LineWidth, 'markersize', opt.MarkerSize);
+            
+            for n = 1 : length(s)
+                
+                
+                set(s(n),'Color',opt.PlotStyles(n,:),'MarkerFaceColor',MarkerFaceColor{n},...
+                    'MarkerEdgeColor',MarkerEdgeColor{n},'LineStyle',opt.LineStyle{n},'Marker',...
+                    opt.PointStyle{n},'DisplayName',opt.DisplayName{n});
+                uistack(s(n),'top');
+                
+            end
+            
+        end
         
+        %%
         if opt.RemoveLegend
             annotation = get(s, 'Annotation');
             if length (annotation) > 1
@@ -762,25 +835,25 @@ else %one plot
                 set(get(annotation, 'LegendInformation'), 'IconDisplayStyle', 'off')
             end
         end
-        
     end
+    
 end
 
 %% Ui Stack
 if opt.UiStack
     if exist('s_1','var')
         for j = 1 : size(s_1,1)
-            uistack(s_1(j), 'bottom') 
+            uistack(s_1(j), 'bottom')
         end
     end
     if exist('s_2','var')
         for j = 1 : size(s_2,1)
-            uistack(s_2(j), 'bottom') 
+            uistack(s_2(j), 'bottom')
         end
     end
     if exist('s','var') && s(1) ~= 0
         for j = 1 : size(s,1)
-            uistack(s(j), 'bottom') 
+            uistack(s(j), 'bottom')
         end
     end
 end
@@ -850,6 +923,22 @@ for n = 1 : length(h)
     hold(h(n),'off')
 end
 
+%%
+if opt.TwoPlots
+    hold(h(1),'on')
+    
+    xLimits = get(h(1), 'Xlim');
+    yLimits = get(h(1), 'Ylim');
+    zLimits = get(h(1), 'Zlim');
+    minZ = min(zLimits);
+    maxZ = max(zLimits);
+    maxX = max(xLimits);
+    
+    add_lh = plot3(h(1),[maxX,maxX],yLimits, [minZ,minZ],'color', opt.ZeroColor, 'linewidth', 5);
+    add_lh.Color = [0,0,0];
+    
+    hold(h(1),'off')
+end
 %% options for yLabes (i.e if in eV but want wavelength)
 if opt.RelabelY
     numTick = length(get(h(1), 'YTick'));
@@ -883,15 +972,15 @@ if (opt.RelabelX || opt.DualX) && ~opt.Hold
     
     % sets the minimum spacing for different wavelength regions
     wave_range = [
-    0, 10
-    500, 50
-    600, 100
-    900, 300
-    1800, 400
-    2000, 800
-    6000, 1200
-    ];
-    wave_range(:,2) = wave_range(:,2)/opt.DualSpacing; 
+        0, 10
+        500, 50
+        600, 100
+        900, 300
+        1800, 400
+        2000, 800
+        6000, 1200
+        ];
+    wave_range(:,2) = wave_range(:,2)/opt.DualSpacing;
     n = 1;
     while n < length(waveValues)
         wr_i = find(waveValues(n) >= wave_range(:,1),1,'last');
@@ -989,12 +1078,14 @@ end
 
 %% Plots new set of axis for tick labels
 if opt.OverlayAxis
-    tickH = zeros(size(h,1),1);
+    tickH = [];
+    
     for n = 1 : length(h)
         grid(h(n), 'off');
         box(h(n), 'on');
         axesPos = get(h(n),'position');
-        tickH(n) = axes('position',axesPos,'fontsize',3,'parent',fh);
+        tickH_n = axes('position',axesPos,'fontsize',3,'parent',fh);
+        tickH = [tickH,tickH_n];
         view(tickH(n), [opt.V1, opt.V2]);
         
         grid(tickH(n), opt.grid);
@@ -1048,6 +1139,8 @@ if ~isempty(opt.patch)
             if opt.patch(k,1)<lim_x(2) || opt.patch(k,1)>lim_x(1)
                 patch_h = patch([opt.patch(k,:),fliplr(opt.patch(k,:))]',[lim(1),lim(1),lim(2),lim(2)]',...
                     opt.patch_color(k,:),'LineStyle','none');
+                
+                patch_h.Annotation.LegendInformation.IconDisplayStyle = 'off';
             end
         end
     end
@@ -1066,9 +1159,12 @@ end
 
 %% Update log_scale (do this last)
 if opt.log_scale && plotSurf
-    ch_ticks = ch.Ticks;
-    ch_ticks = arrayfun(@(x) num2str(x,2),ch_ticks,'uniformoutput',0);
+    ch_ticks_o = ch.Ticks;
+    not_int = rem(ch_ticks_o,1) ~= 0;
+    ch_ticks = arrayfun(@(x) num2str(x,2),ch_ticks_o,'uniformoutput',0);
+    
     ch_ticks = strcat('10^{',ch_ticks,'}');
+    ch_ticks(not_int) = {''};
     ch.TickLabels = ch_ticks;
 end
 

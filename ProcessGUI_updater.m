@@ -26,6 +26,8 @@ opt.save = [];
 
 [opt] = f_OptSet(opt, varargin);
 
+%%
+if isfield(handles,'data')
 
 %Set main items
 data = handles.data;
@@ -33,6 +35,7 @@ time = handles.time;
 wave = handles.wave;
 data_name = handles.data_name_box.String;
 save_dir_parent = handles.save_path_parent.String;
+
 
 %% Undo 
 
@@ -81,19 +84,22 @@ if ~isempty(opt.scale_wave)
     handles.data_config.Data{1,1} = num2str(min(x_range_1, x_range_2));
     handles.data_config.Data{1,2} = num2str(max(x_range_1, x_range_2));
     
-    kinetics_table = handles.traces_menu_data.Kinetics.trace_table(:,1:2);
-    
-    for n=1:size(kinetics_table, 1)
-        if ~isempty(kinetics_table{n,1})
-            kinetics_table{n,1} = num2str(1240./str2num(kinetics_table{n,1}));
-            percentLoc = ~cellfun(@isempty,(regexp(kinetics_table(:,2),'.*\%')));
-            if ~percentLoc(n)
-                kinetics_table{n,2} = num2str(1240./str2num(kinetics_table{n,2}));
+    if isfield(handles.traces_menu_data,'Kinetics')
+        kinetics_table = handles.traces_menu_data.Kinetics.trace_table(:,1:2);
+        
+        for n=1:size(kinetics_table, 1)
+            if ~isempty(kinetics_table{n,1})
+                kinetics_table{n,1} = num2str(1240./str2num(kinetics_table{n,1}));
+                percentLoc = ~cellfun(@isempty,(regexp(kinetics_table(:,2),'.*\%')));
+                if ~percentLoc(n)
+                    kinetics_table{n,2} = num2str(1240./str2num(kinetics_table{n,2}));
+                end
             end
         end
+        
+        handles.traces_menu_data.Kinetics.trace_table = [kinetics_table, handles.traces_menu_data.Kinetics.trace_table(:,3)];
     end
     
-    handles.traces_menu_data.Kinetics.trace_table = [kinetics_table, handles.traces_menu_data.Kinetics.trace_table(:,3)];
     cla(handles.axis_spectra, 'reset')
     pause(0.01)
     cla(handles.axis_kinetics1, 'reset')
@@ -457,6 +463,13 @@ if ~isempty(opt.plot_surf)
             min([max(max(data)),str2num(handles.data_config.Data{3,2})]) ];
     end
     
+    if isinf(ZLim(1))
+        ZLim(1) = -1;
+    end
+    if isinf(ZLim(2))
+        ZLim(1) = 1;
+    end
+        
     surf_handle = f_Plot(data, time, wave, opt.plot_surf, 'FontSize', font_size, 'ShrinkAxes', shrink, 'ZLim', ZLim, 'XLim', timeLim, 'YLim', waveLim);
     
     
@@ -640,6 +653,12 @@ end
 handles.prev_plot = opt.plot;
 handles.prev_plot_handle = opt.plot_handles;
 
+
+else
+   warning('Load Data'); 
+    
+    
+end
 end
 
 

@@ -21,6 +21,8 @@ opt.GreenMax = 0.8;
 opt.commonClim = 0;
 opt.equalBlueRed = 1;
 
+opt.no_zero = 1;
+
 opt.flipUD = 0;
 
 % user input (after autodetection to allow user options)
@@ -83,12 +85,19 @@ opt.cMax(isnan(opt.cMax)) = 0;
 
 
 %% Changes clim for log set...
-if strcmpi(opt.type, 'logTRPL')
+if strcmpi(opt.type(1:3), 'log')
     opt.cMax = abs(opt.cMin);
     opt.cMin = 0;
-    opt.type = 'TRPL';
+    opt.type = opt.type(4:end);
     %opt.flipUD = 0;
 end
+
+%%
+if strcmp(opt.type, 'TRPLredblue')
+    opt.ZeroValue(2) = 0;
+    opt.type = 'Jet';
+end
+
 %% Calculates color map with zero as green, red positive, blue negative
 colourInfo = zeros(opt.numIntervals,3);
 zeroPos = ceil(abs(opt.cMin/(opt.cMax - opt.cMin))*opt.numIntervals);
@@ -223,7 +232,60 @@ elseif strcmp(opt.type, 'TRPL')
     colourInfo(P5:P6,1) = linspace(1,150/255,num);      %Red
     colourInfo(P5:P6,2) = linspace(0,0,num);            %Green
     colourInfo(P5:P6,3) = linspace(0,0,num);            %Blue
-else
+    
+elseif strcmp(opt.type, 'TRPLblue')
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%                                      %%%
+    %%%  P2 - teal            [  0,255,255]  %%%
+    %%%  P2 - dark blue       [  0,  0,150]  %%%
+    %%%                                      %%%
+    %%%  P1 - blue            [  0,  0,255]  %%%
+    %%%                                      %%%
+    %%% (zeroPos) - grey      [150,150,150]  %%%
+    %%%                                      %%%
+    %%%  1 - purple           [230,230,230]  %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    posValues = zeroPos:opt.numIntervals;
+    %P6 = posValues(end);
+    %P5 = posValues(round(5/6*length(posValues)));
+    %P4 = posValues(round(4/6*length(posValues)));
+    
+    P2 = posValues(end);
+    P1 = posValues(round(3/6*length(posValues)));
+    
+    
+    
+    %1 (min) -> (zeroPos)
+    colourInfo(1:zeroPos,1) = linspace(200/255,245/255,zeroPos);      %Red
+    colourInfo(1:zeroPos,2) = linspace(200/255,245/255,zeroPos);      %Red
+    colourInfo(1:zeroPos,3) = linspace(200/255,245/255,zeroPos);      %Blue
+    
+    
+    % zeroPos -> P1
+    num = P1 - zeroPos + 1;
+    colourInfo(zeroPos:P1,1) = linspace(245/255,0,num);            %Red
+    colourInfo(zeroPos:P1,2) = linspace(245/255,0,num);            %Green
+    colourInfo(zeroPos:P1,3) = linspace(245/255,1,num);      %Blue
+    %P1 - > P2
+    num = P2 - P1 + 1;
+    colourInfo(P1:P2,1) = linspace(0,0,num);      %Red
+    colourInfo(P1:P2,2) = linspace(0,0,num);      %Green
+    colourInfo(P1:P2,3) = linspace(1,0,num);      %Blue
+    
+    max_blue = 150/255; %0 black
+    [~,i_max] = min(abs(colourInfo(:,3)-max_blue));
+    colourInfo(i_max:end,:) = [];
+    
+    %
+    if false
+        blue = colourInfo(:,3);
+        red = colourInfo(:,1);
+        %
+        colourInfo(:,3) = red;
+        colourInfo(:,1) = blue;
+    end
+else % Jet
     %%%%%%%%%%%%%%%%%%%%%%%%
     %%%  max - dark red  %%%
     %%%                  %%%
@@ -274,7 +336,7 @@ else
     colourInfo(P4:end,3) = linspace(0,0,opt.numIntervals - P4 +1);         %Blue
 end
 
-%% if opt.flipUD 
+%% if opt.flipUD
 if opt.flipUD
     colourInfo = flipud(colourInfo);
 end
